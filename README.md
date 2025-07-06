@@ -1,1 +1,1 @@
-# virtual_lab
+# Virtual Chemistry Lab
