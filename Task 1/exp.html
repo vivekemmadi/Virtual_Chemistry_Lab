@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Expenditure Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+  
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9fafb;
+      color: #2d3748;
+    }
+
+    .initial-red {
+      background-color: #ffe5e5 !important;
+      color: #a80000;
+    }
+
+    
+    .dashboard, .group-dashboard {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background-color: #f1f5f9;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      flex: 1 1 200px;
+      text-align: center;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    .card p {
+      margin: 8px 0 0;
+      font-size: 28px;
+      font-weight: bold;
+      color: #2b6cb0;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .filters input,
+    .filters select {
+      padding: 10px;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f7fafc;
+    }
+
+    tr:hover {
+      background-color: #ebf8ff;
+    }
+
+    .label {
+      margin-top: 8px;
+      font-weight: 700;
+    }
+
+    .export-buttons {
+      margin-bottom: 20px;
+    }
+
+
+
+
+    .export-buttons button {
+      padding: 10px 15px;
+      margin-right: 10px;
+      background-color: #2b6cb0;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .export-buttons button:hover {
+      background-color: #1a4f8a;
+    }
+   .upload button:hover {
+      background-color: #1a4f8a;
+    }
+    
+    
+    
+    .main-title {
+      text-align: center;
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      background: linear-gradient(to right, #2b6cb0, #00bcd4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .action-buttons button {
+      margin-right: 6px;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .approve-btn {
+      background-color: #38a169;
+      color: white;
+    }
+
+    .reject-btn {
+      background-color: #e53e3e;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+      }
+
+      .dashboard, .group-dashboard {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-title">
+    <h1>Expenditure Master</h1>
+  </div>
+
+  <div class="dashboard">
+    <div class="card">
+      <h3>Total Expenditure</h3>
+      <p id="totalAmount">₹0</p>
+    </div>
+    <div class="card">
+      <h3>Total Transactions</h3>
+      <p id="totalTransactions">0</p>
+    </div>
+    <div class="card">
+      <h3>Date Range</h3>
+      <p id="dateRange">--</p>
+    </div>
+  </div>
+
+  <div class="group-dashboard" id="groupCardsContainer"></div>
+
+  <div class="filters">
+    <label class="label">Start Date:</label>
+    <input type="date" id="fromDate" />
+    <label class="label">End Date:</label>
+    <input type="date" id="toDate" />
+    <select id="groupDropdown">
+      <option value="">Select Group Name</option>
+    </select>
+    <select id="ledgerDropdown">
+      <option value="">Select Ledger Name</option>
+    </select>
+  </div>
+
+  <div class="export-buttons">
+    <button onclick="generatePdf()">Generate PDF</button>
+    <button onclick="generateCsv()">Generate CSV</button>
+  </div>
+
+
+   
+   <div id="uploadSection" style="display: none; margin-bottom: 20px;">
+  <button onclick="document.getElementById('csvInput').click()" id ="upload" style="padding: 10px 15px; background-color: #2b6cb0;  color: white; border: 1px solid #0a509f; border-radius: 8px; font-family: 'Playfair Display', serif;font-size: 14px;cursor: pointer;
+">
+    Upload Salary CSV
+  </button>
+  <input type="file" id="csvInput" accept=".csv" style="display: none;" />
+</div>
+
+  
+
+  <table id="recordTable">
+    <thead>
+      <tr>
+        <th>S.No</th>
+        <th>Group Name</th>
+        <th>Ledger Name</th>
+        <th>Amount Paid</th>
+        <th>Payment Method</th>
+        <th>Narration</th>
+        <th>Transaction ID</th>
+        <th>Date</th>
+        <th id="actionHeader" style="display: none;">Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<!-- Keep your existing HTML/CSS the same, only replace the <script> tag with the one below -->
+
+<script>
+  let allRecords = [];
+  let employeerole = '';
+ let SchoolName ='';
+
+  window.addEventListener("message", (event) => {
+    if (event.data) {
+      if (event.data.employeerole) {
+        employeerole = event.data.employeerole;
+      }
+      if (event.data.School) {
+       SchoolName = event.data.School;
+        console.log("schoolName:",event.data.School);
+      }
+
+    
+      if (event.data.records) {
+        allRecords = event.data.records;
+        populateGroupDropdown(allRecords);
+        applyFilters();
+        renderSummaryCards();
+        renderGroupCards();
+      }
+    }
+  });
+
+  function applyFilters() {
+    const group = document.getElementById("groupDropdown").value;
+    const ledger = document.getElementById("ledgerDropdown").value;
+    const from = new Date(document.getElementById("fromDate").value);
+    const to = new Date(document.getElementById("toDate").value);
+
+    const filtered = allRecords.filter(r => {
+      const inGroup = !group || r["Group Name"] === group;
+      const inLedger = !ledger || r["Ledger Name"] === ledger;
+      const inDate = (!isNaN(from) && !isNaN(to)) ? (new Date(r.Date) >= from && new Date(r.Date) <= to) : true;
+      return inGroup && inLedger && inDate;
+    });
+
+    renderTable(filtered);
+    renderGroupCards();
+    renderSummaryCards();
+  }
+
+  function renderTable(data) {
+    const tbody = document.querySelector("#recordTable tbody");
+    const theadRow = document.querySelector("#recordTable thead tr");
+    const actionHeader = document.getElementById("actionHeader");
+    tbody.innerHTML = "";
+
+    const group = document.getElementById("groupDropdown").value;
+
+    if (group === "Salary") {
+      theadRow.innerHTML = `
+        <th>Staff ID</th>
+        <th>Employee ID</th>
+        <th>Employee Name</th>
+        <th>Pay Period</th>
+        <th>Pay Date</th>
+        <th>Net Pay</th>
+        <th>Paid Days</th>
+        <th>LOP Days</th>
+        <th>Gross Pay</th>
+        <th>Basic</th>
+        <th>HRA</th>
+        <th>Other Allowance</th>
+        <th>Income Tax</th>
+        <th>PF</th>
+        <th>Action</th>
+      `;
+    } else {
+      theadRow.innerHTML = `
+        <th>S.No</th>
+        <th>Group Name</th>
+        <th>Ledger Name</th>
+        <th>Amount Paid</th>
+        <th>Payment Method</th>
+        <th>Narration</th>
+        <th>Transaction ID</th>
+        <th>Date</th>
+        <th id="actionHeader" style="${["Principal", "ADMIN"].includes(employeerole) ? '' : 'display:none'}">Action</th>
+      `;
+    }
+
+    data.forEach((record, index) => {
+      const row = document.createElement("tr");
+
+      const status = (record.approvalstatus || "").toLowerCase().trim();
+      if (!status || status === "pending") {
+        row.classList.add("initial-red");
+      } else if (status === "rejected") {
+        row.classList.add("rejected");
+      } else if (status === "approved") {
+        row.classList.add("approved");
+      }
+
+      const isSalaryGroup = record["Group Name"] === "Salary";
+
+      if (isSalaryGroup) {
+       row.innerHTML = `
+    
+  `;
+      } else {
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${record["Group Name"] || ""}</td>
+          <td>${record["Ledger Name"] || ""}</td>
+          <td>${record["Amount Paid"] || ""}</td>
+          <td>${record["Payment Method"] || ""}</td>
+          <td>${record["Narration"] || ""}</td>
+          <td>${record["Trasactionid"] || ""}</td>
+          <td>${record["Date"] || ""}</td>
+        `;
+
+        if (["Principal", "ADMIN"].includes(employeerole)) {
+          const actionCell = document.createElement("td");
+          actionCell.classList.add("action-buttons");
+
+          if (status === "approved") {
+            actionCell.textContent = "Approved";
+          } else if (status === "rejected") {
+            actionCell.textContent = "Rejected";
+          } else {
+            actionCell.innerHTML = `
+              <button class="approve-btn">Approve</button>
+              <button class="reject-btn">Reject</button>
+            `;
+
+            actionCell.querySelector(".approve-btn").addEventListener("click", () => {
+              row.classList.remove("initial-red", "rejected");
+              row.classList.add("approved");
+              record.approvalstatus = "approved";
+              postApprovalUpdate(record);
+              actionCell.textContent = "Approved";
+              actionCell.style.color = "#0f5132";
+            });
+
+            actionCell.querySelector(".reject-btn").addEventListener("click", () => {
+              row.classList.remove("initial-red", "approved");
+              row.classList.add("rejected");
+              record.approvalstatus = "rejected";
+              postApprovalUpdate(record);
+              actionCell.textContent = "Rejected";
+              actionCell.style.color = "#842029";
+            });
+          }
+
+          row.appendChild(actionCell);
+        }
+      }
+
+      tbody.appendChild(row);
+    });
+  }
+
+  function postApprovalUpdate(record) {
+    const payload = {
+      type: "update",
+      transactionId: record["Trasactionid"] || "",
+      approvalStatus: record.approvalstatus
+    };
+
+    console.log("Payload:", payload);
+
+    fetch("https://prod-00.centralindia.logic.azure.com:443/workflows/863be60b98e94a43be063337ecd89122/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=FNzffOVKuTFWB9usGBN94VOxwKtBT705qjqMEFLvQrw ", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(res => console.log("Approval updated:", res))
+    .catch(err => console.error("Error updating approval:", err));
+  }
+
+  function populateGroupDropdown(records) {
+    const groupDropdown = document.getElementById("groupDropdown");
+    const groups = [...new Set(records.map(r => r["Group Name"]).filter(Boolean))];
+    groupDropdown.innerHTML = `<option value="">Select Group Name</option>` + groups.map(g => `<option>${g}</option>`).join("");
+    populateLedgerDropdown("");
+  }
+
+  function populateLedgerDropdown(group) {
+    const ledgerDropdown = document.getElementById("ledgerDropdown");
+    const filtered = group ? allRecords.filter(r => r["Group Name"] === group) : allRecords;
+    const ledgers = [...new Set(filtered.map(r => r["Ledger Name"]).filter(Boolean))];
+    ledgerDropdown.innerHTML = `<option value="">Select Ledger Name</option>` + ledgers.map(l => `<option>${l}</option>`).join("");
+  }
+
+  function renderGroupCards() {
+    const container = document.getElementById("groupCardsContainer");
+    container.innerHTML = "";
+    const map = new Map();
+    allRecords.forEach(r => {
+      if (!map.has(r["Group Name"])) map.set(r["Group Name"], []);
+      map.get(r["Group Name"]).push(parseFloat(r["Amount Paid"]) || 0);
+    });
+    map.forEach((vals, key) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<h3>${key}</h3><p>₹${vals.reduce((a, b) => a + b, 0).toFixed(2)}</p>`;
+      container.appendChild(card);
+    });
+  }
+
+
+function toggleUploadButton(selectedGroup) {
+  const uploadSection = document.getElementById("uploadSection");
+  uploadSection.style.display = selectedGroup === "Salary" ? "block" : "none";
+}
+
+
+
+
+
+  function renderSummaryCards() {}
+
+  document.getElementById("groupDropdown").addEventListener("change", e => {
+  const selectedGroup = e.target.value;
+  populateLedgerDropdown(selectedGroup);
+  applyFilters();
+  toggleUploadButton(selectedGroup); // 👈 This line shows/hides the CSV button
+});
+
+  document.getElementById("ledgerDropdown").addEventListener("change", applyFilters);
+  document.getElementById("fromDate").addEventListener("change", applyFilters);
+  document.getElementById("toDate").addEventListener("change", applyFilters);
+
+document.getElementById("csvInput").addEventListener("change", function (event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: function (results) {
+       const salaryRecords = results.data.map(record => {
+      // Clean and convert Gross Pay to number (e.g., "₹45,600" => 45600)
+      const grossPayRaw = record["Gross Pay"] || "0";
+      const cleanGrossPay = parseInt(grossPayRaw.replace(/[^0-9]/g, ""), 10);
+
+      // Return cleaned record with additional "Group Name"
+      return {
+        ...record,
+        "Gross Pay": cleanGrossPay,
+        "Group Name": "Salary"
+      };
+    });
+   
+      // Send each record to backend
+      salaryRecords.forEach((record) => {
+ 
+        const payload = {
+          type : "Insert",
+          SchoolName : SchoolName,
+          tablename : "Salaries",
+           ...record
+               
+          
+          
+        };
+        console.log("payload121:", payload);
+
+        fetch("https://prod-00.centralindia.logic.azure.com:443/workflows/863be60b98e94a43be063337ecd89122/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=FNzffOVKuTFWB9usGBN94VOxwKtBT705qjqMEFLvQrw ", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(response => console.log("Uploaded:", response))
+        .catch(err => console.error("Upload error:", err));
+      });
+
+      // Replace allRecords and re-render
+      allRecords = salaryRecords;
+      renderTable(allRecords);
+    }
+  });
+});
+
+
+
+
+
+  function generatePdf() { /* implement if needed */ }
+  function generateCsv() { /* implement if needed */ }
+</script>
+
+</body>
+</html>

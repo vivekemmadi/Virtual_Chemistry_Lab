@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Leave Application</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+  <style>
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Playfair Display', serif;
+      background: linear-gradient(135deg, #e2e8f0, #f5f7fa);
+      color: #0d4484;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      overflow: hidden;
+    }
+
+    .form-container {
+      background-color: #fff;
+      width: 90vw;
+      max-width: 900px;
+      height: 95vh;
+      padding: 40px 50px;
+      border-radius: 15px;
+      box-shadow: 0 20px 40px rgba(13, 68, 132, 0.25),
+        0 10px 20px rgba(13, 68, 132, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    h2 {
+      background-color: #0d4484;
+      color: white;
+      padding: 20px 30px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 2.4rem;
+      letter-spacing: 1.2px;
+      text-align: center;
+      margin-bottom: 40px;
+      user-select: none;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    label {
+      display: block;
+      margin-top: 25px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      user-select: none;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 14px 18px;
+      margin-top: 10px;
+      border: 2px solid #0a509f;
+      border-radius: 12px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      background-color: #fafafa;
+      color: #1a1a1a;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #093569;
+      outline: none;
+      box-shadow: 0 0 10px #093569aa;
+      background-color: #fff;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .leave-type-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .leave-type-option {
+      flex: 1;
+      text-align: center;
+      padding: 18px 12px;
+      background-color: #e9eff8;
+      border-radius: 15px;
+      font-weight: 700;
+      color: #0a509f;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: 0 3px 8px rgba(10, 80, 159, 0.15);
+      transition: all 0.3s ease;
+      letter-spacing: 0.06em;
+      font-size: 1.2rem;
+      user-select: none;
+      user-drag: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .leave-type-option:hover {
+      background-color: #d2dff5;
+      box-shadow: 0 6px 18px rgba(13, 68, 132, 0.22);
+      color: #062b66;
+    }
+
+    .leave-type-option.active {
+      background-color: #0d4484;
+      color: white;
+      border-color: #093569;
+      box-shadow: 0 8px 22px rgba(13, 68, 132, 0.45);
+      cursor: default;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    button.submit-btn {
+      margin-top: auto;
+      background-color: #0d4484;
+      color: white;
+      border: none;
+      padding: 18px 48px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 1.4rem;
+      font-weight: 700;
+      box-shadow: 0 8px 16px rgba(13, 68, 132, 0.35);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    button.submit-btn i {
+      font-size: 1.3rem;
+    }
+
+    button.submit-btn:hover {
+      background-color: #093569;
+      box-shadow: 0 10px 24px rgba(9, 53, 105, 0.7);
+    }
+
+    /* Scrollbar styling */
+    .form-container::-webkit-scrollbar {
+      width: 12px;
+    }
+    .form-container::-webkit-scrollbar-track {
+      background: #f0f4fa;
+      border-radius: 15px;
+    }
+    .form-container::-webkit-scrollbar-thumb {
+      background: #0a509f;
+      border-radius: 15px;
+      border: 3px solid #f0f4fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container" role="main" aria-label="Leave Application Form">
+    <h2>Leave Application Form</h2>
+
+    <div class="leave-type-row" role="tablist" aria-label="Leave Type Selection">
+      <div class="leave-type-option active" id="singleTab" role="tab" tabindex="0" aria-selected="true" aria-controls="singleSection">Single Day</div>
+      <div class="leave-type-option" id="multiTab" role="tab" tabindex="-1" aria-selected="false" aria-controls="multipleSection">Multiple Days</div>
+      <div class="leave-type-option" id="attendanceTab" role="tab" tabindex="-1" aria-selected="false" aria-controls="attendanceSection">Attendance Record</div>
+    </div>
+
+    <!-- Single-Day Section -->
+    <section id="singleSection" role="tabpanel" tabindex="0" aria-labelledby="singleTab">
+      <label for="singleDate">Date</label>
+      <input type="date" id="singleDate" name="singleDate" />
+    </section>
+
+    <!-- Multiple-Day Section -->
+    <section id="multipleSection" class="hidden" role="tabpanel" tabindex="0" aria-labelledby="multiTab">
+      <label for="multiFrom">Leave From</label>
+      <input type="date" id="multiFrom" name="multiFrom" />
+
+      <label for="multiTo">Leave To</label>
+      <input type="date" id="multiTo" name="multiTo" />
+
+      <label for="multiDays">Number of Days</label>
+      <input type="number" id="multiDays" name="multiDays" min="2" value="2" readonly />
+    </section>
+
+    <!-- Attendance Record Section -->
+    <section id="attendanceSection" class="hidden" role="tabpanel" tabindex="0" aria-labelledby="attendanceTab">
+      <label for="attendanceDate">Date</label>
+      <input type="date" id="attendanceDate" name="attendanceDate" />
+
+      <label for="logType">Daily Log</label>
+      <select id="logType" name="logType">
+        <option value="">Select</option>
+        <option>Check-in</option>
+        <option>Check-out</option>
+      </select>
+
+      <label for="logTime">Time</label>
+      <input type="time" id="logTime" name="logTime" />
+    </section>
+
+    <label for="leaveType">Leave Category</label>
+    <select id="leaveType" name="leaveType">
+      <option value="">Select</option>
+      <option value="Work Leave">Work Leave</option>
+      <option value="Personal Leave">Personal Leave</option>
+    </select>
+
+    <div id="personalIssueContainer" class="hidden">
+      <label for="personalIssue">Personal Issue</label>
+      <select id="personalIssue" name="personalIssue">
+        <option value="">Select</option>
+        <option value="Health Issues">Health Issues</option>
+        <option value="Travel">Travel</option>
+      </select>
+    </div>
+
+    <label for="reason">Reason</label>
+    <textarea
+      id="reason"
+      name="reason"
+      rows="4"
+      placeholder="Enter your reason..."
+    ></textarea>
+
+    <button class="submit-btn" type="button" aria-label="Submit Leave Application">
+      <i class="fas fa-paper-plane"></i> Apply
+    </button>
+  </div>
+
+  <script>
+    const singleTab = document.getElementById('singleTab');
+    const multiTab = document.getElementById('multiTab');
+    const attendanceTab = document.getElementById('attendanceTab');
+
+    const singleSection = document.getElementById('singleSection');
+    const multipleSection = document.getElementById('multipleSection');
+    const attendanceSection = document.getElementById('attendanceSection');
+
+    const leaveType = document.getElementById('leaveType');
+    const personalIssueContainer = document.getElementById('personalIssueContainer');
+
+    // Tab switching function
+    function activateTab(selectedTab) {
+      [singleTab, multiTab, attendanceTab].forEach(tab => {
+        const section = document.getElementById(
+          tab.getAttribute('aria-controls')
+        );
+        if (tab === selectedTab) {
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+          tab.setAttribute('tabindex', '0');
+          section.classList.remove('hidden');
+          section.setAttribute('tabindex', '0');
+        } else {
+          tab.classList.remove('active');
+          tab.setAttribute('aria-selected', 'false');
+          tab.setAttribute('tabindex', '-1');
+          section.classList.add('hidden');
+          section.setAttribute('tabindex', '-1');
+        }
+      });
+    }
+
+    singleTab.addEventListener('click', () => activateTab(singleTab));
+    multiTab.addEventListener('click', () => activateTab(multiTab));
+    attendanceTab.addEventListener('click', () => activateTab(attendanceTab));
+
+    // Keyboard accessibility for tabs
+    [singleTab, multiTab, attendanceTab].forEach(tab => {
+      tab.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const next = tab.nextElementSibling || tab.parentElement.firstElementChild;
+          next.focus();
+          activateTab(next);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prev = tab.previousElementSibling || tab.parentElement.lastElementChild;
+          prev.focus();
+          activateTab(prev);
+        }
+      });
+    });
+
+    // Auto-calculate number of days for multiple leave
+    const multiFrom = document.getElementById('multiFrom');
+    const multiTo = document.getElementById('multiTo');
+    const multiDays = document.getElementById('multiDays');
+
+    function calculateDays() {
+      const from = new Date(multiFrom.value);
+      const to = new Date(multiTo.value);
+      if (multiFrom.value && multiTo.value && from <= to) {
+        const timeDiff = to.getTime() - from.getTime();
+        const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
+        multiDays.value = daysDiff;
+      } else {
+        multiDays.value = '';
+      }
+    }
+
+    multiFrom.addEventListener('change', calculateDays);
+    multiTo.addEventListener('change', calculateDays);
+
+    // Show/hide Personal Issue dropdown based on Leave Category
+    leaveType.addEventListener('change', () => {
+      if (leaveType.value === 'Personal Leave') {
+        personalIssueContainer.classList.remove('hidden');
+      } else {
+        personalIssueContainer.classList.add('hidden');
+        document.getElementById('personalIssue').value = '';
+      }
+    });
+
+    // Submit handler (example)
+    document.querySelector('.submit-btn').addEventListener('click', () => {
+      alert('Leave application submitted successfully!');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>School Wallet</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #28a745;
+      --secondary-color: #007BFF;
+      --background-color: #ffffff;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --border-color: #e0e0e0;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: var(--background-color);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      text-align: center; /* Center-align the header */
+      background-color: #0d4484; /* Apply background color */
+      color: white; /* Apply text color */
+      font-family: 'Playfair Display', serif; /* Apply font family */
+      padding: 20px; /* Add padding for better spacing */
+      border-radius: 10px; /* Add rounded corners */
+      margin-bottom: 30px;
+    }
+
+    .header h2 {
+      color: white; /* Ensure text color is white */
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    h2 {
+      color: var(--text-primary);
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      -webkit-background-clip: text;
+     
+    }
+
+    .submit-section {
+      margin-top: 30px;
+      text-align: center;
+      padding-top: 20px;
+      border-top: 2px solid var(--border-color);
+    }
+
+    .submit-btn {
+      background: #0d4484; 
+
+      color: white;
+      padding: 15px 40px;
+      border: 1px solid #0a509f;
+      font-family: 'Playfair Display', serif;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+    }
+
+    #classSelectDropdown {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      background: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow);
+      position: relative; /* Ensure dropdown is positioned relative to the button */
+    }
+
+    #classSelectDropdown:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+    }
+
+    #classOptions {
+      display: none;
+      position: absolute;
+      top: 100%; /* Position directly below the button */
+      left: 0;
+      z-index: 10;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      width: 100%; /* Match the width of the button */
+      max-height: 150px; /* Restrict height */
+      overflow-y: auto; /* Enable scrolling for overflow */
+      margin-top: 2px;
+    }
+
+    #classOptions label {
+      display: block;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    #classOptions label:hover {
+      background: #f1f1f1; /* Subtle hover effect */
+    }
+
+    #classOptions input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap; /* Ensure proper alignment */
+      gap: 20px;
+      margin-bottom: 20px;
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .filter-select, .filter-input {
+      border: 1px solid #0a509f; /* Apply specified border style */
+      padding: 12px;
+      border-radius: 8px;
+      background: white;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .filter-select:focus, .filter-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+      outline: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    th, td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background: #f8f9fa;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .total {
+      text-align: right;
+      font-size: 18px;
+      margin-top: 25px;
+      font-weight: 600;
+      color: var(--text-primary);
+      padding-top: 15px;
+      border-top: 2px solid var(--border-color);
+    }
+
+    .add-fee-section, .print-section {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<input type="text" id="schoolName" style="display: none;" />
+
+<div class="container">
+  <div class="header">
+    <h2>School Wallet</h2>
+  </div>
+  <div class="filter-row">
+    <div class="form-group">
+      <label for="classSelectDropdown">Class</label>
+      <div id="classSelectDropdown">
+        <span id="classSelectPlaceholder">Select Classes</span>
+        <i class="fas fa-chevron-down"></i>
+        <div id="classOptions">
+          <label><input type="checkbox" value="LKG"> LKG</label>
+          <label><input type="checkbox" value="UKG"> UKG</label>
+          <label><input type="checkbox" value="1"> 1</label>
+          <label><input type="checkbox" value="2"> 2</label>
+          <label><input type="checkbox" value="3"> 3</label>
+          <label><input type="checkbox" value="14"> 4</label>
+          <label><input type="checkbox" value="5"> 5</label>
+          <label><input type="checkbox" value="6"> 6</label>
+          <label><input type="checkbox" value="7"> 7</label>
+          <label><input type="checkbox" value="8"> 8</label>
+          <label><input type="checkbox" value="9"> 9</label>
+          <label><input type="checkbox" value="10">10</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="academicYear">Academic Year</label>
+      <select id="academicYear" class="filter-select">
+        <option value="">Select Academic Year</option>
+        <option value="2025-2026">2025-2026</option>
+        <option value="2026-2027">2026-2027</option>
+        <option value="2027-2028">2027-2028</option>
+        <option value="2028-2029">2028-2029</option>
+        <option value="2029-2030">2029-2030</option>
+        <option value="2030-2031">2030-2031</option>
+        <option value="2031-2032">2031-2032</option>
+        <option value="2033-2034">2033-2034</option>
+        <option value="2034-2035">2034-2035</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="feeType">Fee Type</label>
+      <select id="feeType" class="filter-select">
+        <option value="">Select Fee Type</option>
+        <option value="Tuition Fee">Tuition Fee</option>
+        <option value="Library Fee">Library Fee</option>
+        <option value="Food Fee">Food Fee Fee</option>
+        <option value="uniform Fee">Uniform Fee</option>
+        <option value="Others">Others</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="amount">Amount</label>
+      <input type="number" id="amount" class="filter-input" placeholder="Enter amount" min="0">
+    </div>
+  </div>
+
+  <div class="add-fee-section">
+    <button class="submit-btn" id="addFeeBtn">
+      <i class="fas fa-plus"></i>
+      Add Fee
+    </button>
+  </div>
+
+  <table id="feeTable">
+    <thead>
+      <tr>
+        <th>Fee Type</th>
+        <th>Amount</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="total" id="totalAmount">Total Amount: ₹0</div>
+
+  <div class="submit-section">
+    <button class="submit-btn" id="submitFeeDetails">
+      <i class="fas fa-paper-plane"></i>
+      Submit
+    </button>
+  </div>
+
+  <div class="print-section">
+    <button class="submit-btn" id="printPdfBtn">
+      <i class="fas fa-file-pdf"></i>
+      Print PDF
+    </button>
+  </div>
+</div>
+
+<script>
+  let total = 0; // Ensure total is initialized correctly
+
+  const classSelectDropdown = document.getElementById("classSelectDropdown");
+  const classOptions = document.getElementById("classOptions");
+  const classSelectPlaceholder = document.getElementById("classSelectPlaceholder");
+
+  classSelectDropdown.addEventListener("click", () => {
+    classOptions.style.display = classOptions.style.display === "block" ? "none" : "block";
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!classSelectDropdown.contains(e.target)) {
+      classOptions.style.display = "none";
+    }
+  });
+
+  function getSelectedClasses() {
+    return Array.from(classOptions.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
+  }
+
+  function updateClassDisplay() {
+    const selectedClasses = getSelectedClasses();
+    if (selectedClasses.length === 0) {
+      classSelectPlaceholder.textContent = "Select Classes";
+    } else {
+      classSelectPlaceholder.textContent = selectedClasses.join(", ");
+    }
+  }
+
+  classOptions.querySelectorAll("input[type=checkbox]").forEach(cb => {
+    cb.addEventListener("change", updateClassDisplay);
+  });
+
+  document.getElementById("addFeeBtn").addEventListener("click", () => {
+    const selectedClasses = getSelectedClasses();
+    const academicYear = document.getElementById("academicYear").value;
+    const feeType = document.getElementById("feeType").value;
+    const amount = parseFloat(document.getElementById("amount").value); // Ensure amount is parsed as a number
+
+    if (selectedClasses.length === 0 || !academicYear || !feeType || isNaN(amount) || amount <= 0) {
+      alert("Please fill all fields and select at least one class with a valid amount.");
+      return;
+    }
+
+    const tbody = document.querySelector("#feeTable tbody");
+    selectedClasses.forEach(cls => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${cls} - ${feeType}</td>
+        <td>₹${amount.toFixed(2)}</td>
+        <td>
+          <button class="delete-btn" onclick="deleteRow(this)" title="Delete Fee" style="background: transparent; border: none; cursor: pointer;">
+            <i class="fas fa-trash" style="color: #e74c3c; font-size: 18px;"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    total += amount * selectedClasses.length; // Correctly update the total
+    document.getElementById("totalAmount").textContent = `Total Amount: ₹${total.toFixed(2)}`;
+
+    document.getElementById("feeType").value = "";
+    document.getElementById("amount").value = "";
+    classOptions.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = false);
+    updateClassDisplay();
+  });
+
+  function deleteRow(button) {
+    const row = button.closest("tr");
+    const amount = parseFloat(row.cells[1].textContent.replace("₹", "").trim()); // Parse the amount correctly
+    if (!isNaN(amount)) {
+      total -= amount; // Deduct the amount from the total
+    }
+    document.getElementById("totalAmount").textContent = `Total Amount: ₹${total.toFixed(2)}`;
+    row.remove();
+  }
+
+  document.getElementById("printPdfBtn").addEventListener("click", () => {
+    const tableContent = document.getElementById("feeTable").outerHTML;
+    const style = `
+      <style>
+        table { width: 100%; border-collapse: collapse; font-size: 16px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background: #f8f9fa; }
+        .total { font-weight: bold; text-align: right; margin-top: 20px; }
+      </style>
+    `;
+    const win = window.open("", "", "height=700,width=700");
+    win.document.write("<html><head><title>Fee Details</title>");
+    win.document.write(style);
+    win.document.write("</head><body>");
+    win.document.write(tableContent);
+    win.document.write(`<div class="total">Total Amount: ₹${total.toFixed(2)}</div>`);
+    win.document.write("</body></html>");
+    win.document.close();
+    win.print();
+  });
+
+ 
+window.addEventListener("message",(event)=>{
+                    let schoolName=document.getElementById("schoolName")
+                        if (event.data.schoolName) {
+                                console.log("Received from Wix:", event.data.schoolName);
+                             schoolName.value = event.data.schoolName;
+                            }
+                })
+
+
+
+
+
+
+  document.getElementById("submitFeeDetails").addEventListener("click", () => {
+    const schoolName = document.getElementById("schoolName").value;
+    const academicYear = document.getElementById("academicYear").value;
+
+    if (!academicYear) {
+      alert("Please enter the school name and academic year.");
+      return;
+    }
+
+    const rows = document.querySelectorAll("#feeTable tbody tr");
+    if (rows.length === 0) {
+      alert("No fee data to submit.");
+      return;
+    }
+
+    const payload = {};
+
+    rows.forEach(row => {
+      const keyText = row.cells[0].textContent; // "1 - Tuition Fee"
+      const [cls, feeType] = keyText.split(" - ");
+      const amount = parseFloat(row.cells[1].textContent.replace("₹", "").trim());
+      const key = `${cls}_${feeType}`;
+
+      payload[key] = {
+        school: schoolName,
+        class: cls,
+        academicYear: academicYear,
+        feeType: feeType,
+        amount: amount
+      };
+    });
+
+     console.log("Sending to backend:", payload); // ✅ Inspect this in console
+
+    // 👉 POST to backend
+    fetch("https://your-backend-api.com/fees", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Failed to submit fee data.");
+      return response.json();
+    })
+    .then(data => {
+      alert("Fee data submitted successfully!");
+      console.log("Backend response:", data);
+    })
+    .catch(error => {
+      //console.error("Error submitting fee data:", error);
+      //alert("There was an error submitting the data.");
+    });
+
+
+  });
+
+
+
+</script>
+
+</body>
+</html>

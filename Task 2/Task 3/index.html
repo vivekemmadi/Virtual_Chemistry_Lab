@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leave Application</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Playfair Display', serif;
+      background-color: #f5f5f5;
+      padding: 30px;
+    }
+
+    .form-container {
+      background-color: white;
+      padding: 25px;
+      border-radius: 8px;
+      max-width: 550px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      background-color: #0d4484;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #0a509f;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-family: 'Playfair Display', serif;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #0056b3;
+      outline: none;
+      box-shadow: 0 0 4px #0056b3;
+    }
+
+    .leave-type-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .leave-type-option {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      border: 2px solid transparent;
+      margin-right: 10px;
+      transition: background-color 0.3s;
+    }
+
+    .leave-type-option:last-child {
+      margin-right: 0;
+    }
+
+    .leave-type-option:hover {
+      background-color: #cdd8e0;
+    }
+
+    .leave-type-option.active {
+      background-color: #0d4484;
+      color: white;
+      border-color: #0a509f;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button.submit-btn {
+      display: block;
+      margin: 25px auto 0 auto;
+      background-color: #0d4484;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background-color 0.3s;
+    }
+
+    button.submit-btn:hover {
+      background-color: #093569;
+    }
+
+    @media (min-width: 768px) {
+      .form-container {
+        max-width: 700px;
+        padding: 40px;
+      }
+
+      textarea {
+        height: 100px;
+      }
+
+      button.submit-btn {
+        font-size: 16px;
+        padding: 12px 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>Leave Application Form</h2>
+
+    <div class="leave-type-row">
+      <div class="leave-type-option active" id="singleTab">Single Day</div>
+      <div class="leave-type-option" id="multiTab">Multiple Days</div>
+      <div class="leave-type-option" id="attendanceTab">Attendance Record</div>
+    </div>
+
+    <!-- Single-Day Section -->
+    <div id="singleSection">
+      <label for="singleDate">Date</label>
+      <input type="date" id="singleDate">
+    </div>
+
+    <!-- Multiple-Day Section -->
+    <div id="multipleSection" class="hidden">
+      <label for="multiFrom">Leave From</label>
+      <input type="date" id="multiFrom">
+
+      <label for="multiTo">Leave To</label>
+      <input type="date" id="multiTo">
+
+      <label for="multiDays">Number of Days</label>
+      <input type="number" id="multiDays" min="2" value="2">
+    </div>
+
+    <!-- Attendance Record Section -->
+    <div id="attendanceSection" class="hidden">
+      <label for="attendanceDate">Date</label>
+      <input type="date" id="attendanceDate">
+
+      <label for="logType">Daily Log</label>
+      <select id="logType">
+        <option value="">Select</option>
+        <option>Check-in</option>
+        <option>Check-out</option>
+      </select>
+
+      <label for="logTime">Time</label>
+      <input type="time" id="logTime">
+    </div>
+
+    <label for="leaveType">Leave Category</label>
+    <select id="leaveType">
+      <option value="">Select</option>
+      <option value="Work Leave">Work Leave</option>
+      <option value="Personal Leave">Personal Leave</option>
+    </select>
+
+    <!-- New dynamic dropdown for Personal Issue -->
+    <div id="personalIssueContainer" class="hidden">
+      <label for="personalIssue">Personal Issue</label>
+      <select id="personalIssue">
+        <option value="">Select</option>
+        <option value="Health Issues">Health Issues</option>
+        <option value="Travel">Travel</option>
+      </select>
+    </div>
+
+    <label for="reason">Reason</label>
+    <textarea id="reason" rows="3" placeholder="Enter your reason..."></textarea>
+
+    <button class="submit-btn"><i class="fas fa-paper-plane"></i> Apply</button>
+  </div>
+
+  <script>
+    const singleTab = document.getElementById('singleTab');
+    const multiTab = document.getElementById('multiTab');
+    const attendanceTab = document.getElementById('attendanceTab');
+
+    const singleSection = document.getElementById('singleSection');
+    const multipleSection = document.getElementById('multipleSection');
+    const attendanceSection = document.getElementById('attendanceSection');
+
+    const submitBtn = document.querySelector('.submit-btn');
+
+    const leaveType = document.getElementById('leaveType');
+    const personalIssueContainer = document.getElementById('personalIssueContainer');
+
+    singleTab.addEventListener('click', () => {
+      singleTab.classList.add('active');
+      multiTab.classList.remove('active');
+      attendanceTab.classList.remove('active');
+      singleSection.classList.remove('hidden');
+      multipleSection.classList.add('hidden');
+      attendanceSection.classList.add('hidden');
+    });
+
+    multiTab.addEventListener('click', () => {
+      multiTab.classList.add('active');
+      singleTab.classList.remove('active');
+      attendanceTab.classList.remove('active');
+      multipleSection.classList.remove('hidden');
+      singleSection.classList.add('hidden');
+      attendanceSection.classList.add('hidden');
+    });
+
+    attendanceTab.addEventListener('click', () => {
+      attendanceTab.classList.add('active');
+      singleTab.classList.remove('active');
+      multiTab.classList.remove('active');
+      attendanceSection.classList.remove('hidden');
+      singleSection.classList.add('hidden');
+      multipleSection.classList.add('hidden');
+    });
+
+    // Auto-calculate number of days for multiple leave
+    const multiFrom = document.getElementById('multiFrom');
+    const multiTo = document.getElementById('multiTo');
+    const multiDays = document.getElementById('multiDays');
+
+    function calculateDays() {
+      const from = new Date(multiFrom.value);
+      const to = new Date(multiTo.value);
+      if (multiFrom.value && multiTo.value && from <= to) {
+        const timeDiff = to.getTime() - from.getTime();
+        const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
+        multiDays.value = daysDiff;
+      }
+    }
+
+    multiFrom.addEventListener('change', calculateDays);
+    multiTo.addEventListener('change', calculateDays);
+
+    // Show/hide Personal Issue dropdown based on Leave Category
+    leaveType.addEventListener('change', () => {
+      if (leaveType.value === 'Personal Leave') {
+        personalIssueContainer.classList.remove('hidden');
+      } else {
+        personalIssueContainer.classList.add('hidden');
+        // Clear personal issue selection if hidden
+        document.getElementById('personalIssue').value = "";
+      }
+    });
+
+    // Submit handling (you can customize further)
+    submitBtn.addEventListener('click', () => {
+      alert("Submitted successfully!");
+    });
+  </script>
+</body>
+</html>

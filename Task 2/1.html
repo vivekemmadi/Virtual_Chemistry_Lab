@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Master - Blooming Dales High School</title>
+    
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+    }
+
+    header {
+      background-color: #0d4484;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem;
+      background: #fff3e0;
+    }
+
+    .custom-select {
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #0a509f;
+      border-radius: 4px;
+    }
+
+    .content {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    h3 {
+      font-family: 'Playfair Display', serif;
+    }
+
+.table-container {
+  width: 100%;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+#studentDetailsTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#studentDetailsTable th,
+#studentDetailsTable td {
+  text-align: center;
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+#studentDetailsTable th {
+  background-color: #2f3542;
+  color: white;
+  font-weight: bold;
+}
+
+#studentDetailsTable td button {
+  background-color: #0a509f;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>Student Master</h2>
+    
+  </header>
+
+  <div class="controls">
+    <select id="yearDropdown" class="custom-select"></select>
+    <select id="classDropdown" class="custom-select"></select>
+    <select id="sectionDropdown" class="custom-select" disabled></select>
+  </div>
+
+
+<div class="table-container">
+  <table id="studentDetailsTable">
+    <thead>
+      <tr>
+        <th>Student Id</th>
+        <th>Student Name</th>
+        <th>Class</th>
+        <th>Section</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="studentDetailsBody">
+      <!-- Filled by JS -->
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="content">
+  <!-- Table will be rendered here -->
+</div>
+
+  <div class="content">
+    
+  </div>
+
+  <script>
+    
+
+    
+  const yearDropdown = document.getElementById("yearDropdown");
+  const classDropdown = document.getElementById("classDropdown");
+  const sectionDropdown = document.getElementById("sectionDropdown");
+
+  const currentYear = new Date().getFullYear();
+
+  // Academic Year Placeholder
+  const yearPlaceholder = document.createElement("option");
+  yearPlaceholder.textContent = "Select Academic Year";
+  yearPlaceholder.disabled = true;
+  yearPlaceholder.selected = true;
+  yearDropdown.appendChild(yearPlaceholder);
+
+  for (let i = 0; i < 10; i++) {
+    const year = currentYear + i;
+  const option = document.createElement("option");
+  option.value = `${year}-${year + 1}`;
+  option.textContent = `${year}-${year + 1}`;
+  yearDropdown.appendChild(option);
+  }
+
+  // Class Placeholder
+  const classPlaceholder = document.createElement("option");
+  classPlaceholder.textContent = "Select Class";
+  classPlaceholder.disabled = true;
+  classPlaceholder.selected = true;
+  classDropdown.appendChild(classPlaceholder);
+
+  const classes = ["LKG", "UKG", ...Array.from({ length: 10 }, (_, i) => `${i + 1}`)];
+  classes.forEach(cls => {
+    const option = document.createElement("option");
+    option.value = cls;
+    option.textContent = cls;
+    classDropdown.appendChild(option);
+  });
+
+  // Section Placeholder
+  const sectionPlaceholder = document.createElement("option");
+  sectionPlaceholder.textContent = "Select Section";
+  sectionPlaceholder.disabled = true;
+  sectionPlaceholder.selected = true;
+  sectionDropdown.appendChild(sectionPlaceholder);
+
+  ["A", "B", "C", "D"].forEach(section => {
+    const option = document.createElement("option");
+    option.value = section;
+    option.textContent = `Section ${section}`;
+    sectionDropdown.appendChild(option);
+  });
+
+  // Enable section dropdown when class is selected
+  classDropdown.addEventListener("change", () => {
+    sectionDropdown.disabled = false;
+  });
+
+sectionDropdown.addEventListener("change", () => {
+    const className = classDropdown.value;
+    const section = sectionDropdown.value;
+    //const schoolname = "Blooming Dales High School";
+
+    // Required properties (set to null unless provided)
+    const studentid = "";
+    const teacherid = "";
+    const examid = "";
+    const date = "";
+    const tableName = "Student Master";
+
+    const payload = {
+      
+      studentid: studentid,
+      teacherid: teacherid,
+      examid: examid,
+      //schoolname: schoolname,
+      className: className,
+      section: section,
+      date: date,
+      tableName: tableName
+      
+    };
+    console.log("Sending to backend :",payload)
+    // Send data to Wix page
+    window.parent.postMessage(payload, "*");
+  });
+    
+    window.addEventListener("message", (event) => {
+    const records = event.data.records;
+
+        console.log("Records fetched from wix : ",records);
+      
+        
+  });
+
+  
+
+  
+  </script>
+
+
+</body>
+</html>
+
+

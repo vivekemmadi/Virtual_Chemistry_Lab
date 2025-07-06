@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Chemistry Lab</title>
+    <style>
+
+       .step-display {
+            position: fixed;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 15px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            max-width: 80%;
+            text-align: center;
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .step-display.show {
+            opacity: 1;
+        }
+
+        :root {
+            --primary: #2b5876;
+            --secondary: #4e4376;
+            --accent: #00c6ff;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--light);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-title i {
+            margin-right: 10px;
+            color: var(--accent);
+        }
+
+        .items-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .item {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .item:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .item i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .item span {
+            font-size: 0.8rem;
+        }
+
+        /* New button style for adding flasks and elements */
+        .add-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+            gap: 6px;
+        }
+
+        .add-btn:hover {
+            background: #009fd6;
+        }
+
+        /* Main Workspace Styles */
+        .workspace {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+        }
+
+        .lab-bench {
+            flex-grow: 1;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .lab-bench::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.3;
+        }
+
+        .flask {
+            position: absolute;
+            width: 150px;   /* increased from 90px */
+            height: 220px;  /* increased from 140px */
+            cursor: move;
+            transition: transform 0.3s ease;
+            z-index: 10;
+        }
+
+        .flask:hover {
+            transform: scale(1.05);
+        }
+
+        .flask-content {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius:0px 0px 35px 35px;;
+            transition: all 0.5s ease;
+            /* Make sure the content doesn't overflow the beaker visually */
+            max-height: 100%;
+            overflow: hidden;
+
+        }
+
+        .conical-flask {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200"><path d="M30,200 L70,200 L80,150 C80,100 70,50 50,0 C30,50 20,100 20,150 Z" fill="rgba(255,255,255,0.1)" stroke="white" stroke-width="1"/></svg>') no-repeat center center;
+            background-size: contain;
+        }
+
+        .volumetric-flask {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200"><path d="M30,200 L70,200 L75,180 C75,150 65,50 50,0 C35,50 25,150 25,180 Z" fill="rgba(255,255,255,0.1)" stroke="white" stroke-width="1"/></svg>') no-repeat center center;
+            background-size: contain;
+        }
+
+        .round-bottom-flask {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200"><path d="M50,200 C20,200 0,150 0,100 C0,50 20,0 50,0 C80,0 100,50 100,100 C100,150 80,200 50,200 Z" fill="rgba(255,255,255,0.1)" stroke="white" stroke-width="1"/></svg>') no-repeat center center;
+            background-size: contain;
+        }
+
+     .beaker-flask {
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 90"><path d="M15 90h40c5 0 10-5 10-10V20c0-3-2-6-5-8l-5-5c-2-2-5-2-8-2H25c-3 0-6 0-8 2l-5 5c-3 2-5 5-5 8v60c0 5 5 10 10 10z" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="1.5"/><path d="M25 5h20c3 0 5 2 5 5v5c0 3-2 5-5 5H25c-3 0-5-2-5-5V10c0-3 2-5 5-5z" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="1"/></svg>') no-repeat center center/350px 450px;
+  border-radius: 6px 6px 35px 35px;
+  position: absolute;
+  width: 150px;
+  height: 220px;
+  left: calc(50% - 75px);
+  bottom: 40px;
+  z-index: 10;
+}
+
+/* Liquid measurement markings */
+.beaker-flask::before {
+  content: "";
+  position: absolute;
+  top: 10%;
+  left: 15%;
+  right: 15%;
+  bottom: 10%;
+  background: 
+    linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(255,255,255,0.15) 1px,
+      transparent 2px,
+      transparent 19%,
+      rgba(255,255,255,0.15) 20%,
+      transparent 21%,
+      transparent 39%,
+      rgba(255,255,255,0.15) 40%,
+      transparent 41%,
+      transparent 59%,
+      rgba(255,255,255,0.15) 60%,
+      transparent 61%,
+      transparent 79%,
+      rgba(255,255,255,0.15) 80%,
+      transparent 81%
+    );
+  pointer-events: none;
+  border-radius: 0 0 12px 12px;
+}
+
+
+        .lab-tube-flask {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 200"><rect x="20" y="10" width="20" height="180" rx="10" fill="rgba(0,198,255,0.15)" stroke="white" stroke-width="2"/><ellipse cx="30" cy="10" rx="10" ry="5" fill="rgba(0,198,255,0.18)" stroke="white" stroke-width="1"/></svg>') no-repeat center center;
+            background-size: contain;
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #00b4e6;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            width: 100px;
+        }
+
+        /* Reaction Display */
+        .reaction-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            width: 350px;
+            max-height: calc(100% - 150px);
+            overflow-y: auto;
+            height : 700px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .reaction-equation {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            min-height: 30px;
+        }
+
+        .elements-list {
+            margin-bottom: 15px;
+        }
+
+        .element-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .output-form {
+            margin-top: 15px;
+        }
+
+        .output-form input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            color: white;
+        }
+
+        /* Particles Animation */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Flask Label */
+        .flask-label {
+            position: absolute;
+            bottom: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        /* Notes Feature */
+        .notes-section {
+            background: rgba(44, 62, 80, 0.85);
+            border-radius: 8px;
+            margin-top: 18px;
+            padding: 12px 14px 10px 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            color: #eaf6fb;
+            font-size: 18px;
+            min-height: 390px;
+            max-height: 390px;
+            overflow-y: auto;
+        }
+        #notes-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        #notes-list li {
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: #eaf6fb;
+            background: rgba(0,198,255,0.08);
+            border-radius: 4px;
+            padding: 4px 8px;
+            list-style-type: decimal;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+            .reaction-display {
+                position: static;
+                width: 100%;
+                margin-top: 20px;
+            }
+        }
+
+       .stirring-text {
+            position: absolute;
+            top: 25%;
+            left: 35%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            
+            padding: 15px 30px;
+            border-radius: 50px;
+            z-index: 20;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            font-family: 'Arial', sans-serif;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        /* Optional: Add a subtle fade-in/fade-out */
+        @keyframes gentleAppear {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .stirring-text {
+            animation: gentleAppear 0.3s ease-out forwards;
+        }
+        /* Add these new styles for the color palette */
+        .sidebar-section.color-section {
+            margin-top: -10px; /* Reduce gap from elements section */
+            padding-top: 0;
+        }
+
+        .color-palette {
+            padding: 12px;
+            background-color: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .color-palette-title {
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+        }
+
+        .color-palette-title i {
+            margin-right: 8px;
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .colors-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+        }
+
+        .color-item {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .color-item:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 8px rgba(0, 198, 255, 0.3);
+        }
+
+        .color-item.active {
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+   .add-color-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+            justify-content: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            gap: 6px;
+          display: flex;
+ }
+
+        .add-color-btn:hover {
+            background: #009fd6;
+        }
+
+        .add-color-btn i {
+            font-size: 0.9rem;
+        }
+
+
+        /* Color swatches matching your UI */
+        .color-1 { background-color: #00c6ff; } /* Accent teal */
+        .color-2 { background-color: #2b5876; } /* Dark blue */
+        .color-3 { background-color: #4e4376; } /* Purple */
+        .color-4 { background-color: #ffa500; } /* Sodium orange */
+        .color-5 { background-color: #90ee90; } /* Chlorine green */
+        .color-6 { background-color: #ff4500; } /* Iron red */
+    
+    /* ---- Burner Base ---- */
+.burner {
+  position: absolute;
+  bottom: 30px;
+  left: 30%;
+  transform: translateX(-50%);
+  z-index: 8;
+  width: 60px;
+}
+
+.burner-stand {
+  width: 50px;
+  height: 8px;
+  background: linear-gradient(to right, 
+    #3a3a3a, #5a5a5a, #3a3a3a);
+  border-radius: 2px;
+  margin: 0 auto;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.burner-nozzle {
+  width: 12px;
+  height: 20px;
+  background: linear-gradient(to right, 
+    #7d7d7d, #a0a0a0, #7d7d7d);
+  margin: 0 auto;
+  border-radius: 2px 2px 0 0;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- Animated Flames ---- */
+.flames-container {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 80px;
+  z-index: 1;
+}
+
+.flame {
+  position: absolute;
+  border-radius: 50% 50% 20% 20%;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  filter: blur(8px);
+  animation: flicker 0.8s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  mix-blend-mode: screen;
+}
+
+/* Base Flame Layer */
+.flame-base {
+  width: 25px;
+  height: 70px;
+  background: rgba(255, 165, 0, 0.7);
+  box-shadow: 0 0 15px 5px rgba(255, 100, 0, 0.4);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Middle Flame Layer */
+.flame-mid {
+  width: 20px;
+  height: 50px;
+  background: rgba(255, 255, 0, 0.6);
+  box-shadow: 0 0 10px 3px rgba(255, 200, 0, 0.3);
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 0.2s;
+}
+
+/* Tip Flame Layer */
+.flame-tip {
+  width: 15px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.2);
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 0.4s;
+}
+
+@keyframes flicker {
+  0%, 100% {
+    transform: translateX(-50%) scaleY(1) scaleX(1);
+    opacity: 0.95;
+  }
+  25% {
+    transform: translateX(-50%) scaleY(1.1) scaleX(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(-50%) scaleY(0.95) scaleX(1.05);
+    opacity: 1;
+  }
+  75% {
+    transform: translateX(-50%) scaleY(1.05) scaleX(0.95);
+    opacity: 0.85;
+  }
+}
+
+/* Heat Levels */
+.high-heat .flame-base {
+  height: 100px;
+  background: rgba(255, 80, 0, 0.8);
+}
+.high-heat .flame-mid {
+  height: 70px;
+}
+.high-heat .flame-tip {
+  height: 40px;
+}
+    
+    
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-flask"></i>
+                    <span>Flasks</span>
+                </div>
+                <div class="items-container" id="flasks-container">
+                    <div class="item" data-type="flask" data-flask="conical">
+                        <i class="fas fa-flask"></i>
+                        <span>Conical Flask</span>
+                    </div>
+                    <div class="item" data-type="flask" data-flask="volumetric">
+                        <i class="fas fa-flask"></i>
+                        <span>Volumetric Flask</span>
+                    </div>
+                    <div class="item" data-type="flask" data-flask="round-bottom">
+                        <i class="fas fa-flask"></i>
+                        <span>Round Bottom Flask</span>
+                    </div>
+                    <!-- Add Laboratory Tube -->
+                    <div class="item" data-type="flask" data-flask="tube">
+                        <i class="fas fa-vial" style="color:#f0f7f9"></i>
+                        <span>Lab Tube</span>
+                    </div>
+                </div>
+                <button class="add-btn" id="add-flask-btn"><i class="fas fa-plus"></i>Add Flask</button>
+            </div>
+
+            <!-- Dropper Section -->
+            <div class="sidebar-section" id="dropper-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-eye-dropper"></i>
+                    <span>Dropper</span>
+                </div>
+                <div class="items-container" id="droppers-container">
+                    <div class="item dropper-item" tabindex="0">
+                        <i class="fas fa-eye-dropper" style="color:#00c6ff"></i>
+                        <span>Dropper</span>
+                    </div>
+                </div>
+                <button class="add-btn" id="add-dropper-btn"><i class="fas fa-plus"></i>Add a Dropper</button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-atom"></i>
+                    <span>Elements</span>
+                </div>
+                <div class="items-container" id="elements-container">
+                    <div class="item" data-type="element" data-element="H" data-color="#ffffff">
+                        <i class="fas fa-circle" style="color: #ffffff"></i>
+                        <span>Hydrogen (H)</span>
+                    </div>
+                    <div class="item" data-type="element" data-element="O" data-color="#add8e6">
+                        <i class="fas fa-circle" style="color: #add8e6"></i>
+                        <span>Oxygen (O)</span>
+                    </div>
+                    <div class="item" data-type="element" data-element="Na" data-color="#ffa500">
+                        <i class="fas fa-circle" style="color: #ffa500"></i>
+                        <span>Sodium (Na)</span>
+                    </div>
+                    <div class="item" data-type="element" data-element="Cl" data-color="#90ee90">
+                        <i class="fas fa-circle" style="color: #90ee90"></i>
+                        <span>Chlorine (Cl)</span>
+                    </div>
+                    <div class="item" data-type="element" data-element="C" data-color="#a9a9a9">
+                        <i class="fas fa-circle" style="color: #a9a9a9"></i>
+                        <span>Carbon (C)</span>
+                    </div>
+                    <div class="item" data-type="element" data-element="Fe" data-color="#ff4500">
+                        <i class="fas fa-circle" style="color: #ff4500"></i>
+                        <span>Iron (Fe)</span>
+                    </div>
+                </div>
+                <button class="add-btn" id="add-element-btn"><i class="fas fa-plus"></i>Add Element</button>
+            </div>
+ <div class="sidebar-section color-section">
+                <div class="color-palette">
+                    <div class="color-palette-title">
+                        <i class="fas fa-palette"></i>
+                        <span> Color</span>
+                    </div>
+                    <div class="colors-container" id="colors-container">
+                        <div class="color-item color-1 active" data-color="#00c6ff" data-name="Sky Blue"></div>
+                        <div class="color-item color-2" data-color="#2b5876" data-name="Dark Blue"></div>
+                        <div class="color-item color-3" data-color="#4e4376"  data-name="Deep Purple"></div>
+                        <div class="color-item color-4" data-color="#ffa500" data-name="Orange" ></div>
+                        <div class="color-item color-5" data-color="#90ee90"  data-name="Light Green"></div>
+                        <div class="color-item color-6" data-color="#ff4500"  data-name="Orange Red"></div>
+                    </div>
+                    
+                </div>
+ 
+            </div>
+        
+<button class="add-color-btn" id="add-color-btn">
+                    <i class="fas fa-plus"></i> Add Custom Color
+                </button>
+
+         
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="workspace">
+             <div id="step-display" class="step-display"></div>
+            <div class="lab-bench" id="lab-bench">
+                <!-- Add to your HTML (inside lab-bench) -->
+<div id="burner" class="burner">
+  <div class="burner-stand"></div>
+  <div class="burner-nozzle"></div>
+  <div class="flames-container"></div>
+</div>
+                <!-- Flasks will be added here -->
+            </div>
+         
+            <!-- Controls Panel -->
+            <div class="controls-panel">
+                <div class="control-group">
+                    <button id="mix-btn" disabled><i class="fas fa-blender"></i> Mix</button>
+                    <button id="heat-btn" disabled><i class="fas fa-fire"></i> Heat</button>
+                    <button id="cool-btn" disabled><i class="fas fa-snowflake"></i> Cool</button>
+                </div>
+                <div class="control-group slider-container">
+                    <span><i class="fas fa-tachometer-alt"></i> Speed:</span>
+                    <input type="range" id="speed-slider" min="1" max="10" value="5" disabled>
+                </div>
+                <div class="control-group slider-container">
+                    <span><i class="fas fa-thermometer-half"></i> Temp:</span>
+                    <input type="range" id="temp-slider" min="0" max="100" value="25" disabled>
+                </div>
+                <button id="reset-btn"><i class="fas fa-trash"></i> Reset</button>
+            </div>
+        </div>
+
+        <!-- Reaction Display -->
+        <div class="reaction-display">
+            <h3>Reaction Monitor</h3>
+            <div class="elements-list">
+                <h4>Current Mixture:</h4>
+                <div id="mixture-list">
+                    <!-- Elements will be listed here -->
+                    <p class="empty-message">No elements added yet</p>
+                </div>
+            </div>
+            <div class="reaction-equation" id="reaction-equation">
+                <!-- Reaction equation will appear here -->
+            </div>
+            <div class="output-form">
+                <h4>Reaction Result:</h4>
+                <input type="text" id="output-input" placeholder="Enter output compound (e.g. H2O)" disabled />
+                <button id="submit-output" type="button" disabled>Submit</button>
+            </div>
+            <!-- Notes Feature -->
+            <div class="notes-section" id="notes-section">
+                <h4 style="margin-top:18px;margin-bottom:8px;color:#00c6ff;">Experiment Notes</h4>
+                <ol id="notes-list" style="padding-left:18px;margin:0;"></ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const labBench = document.getElementById('lab-bench');
+            const flasksContainer = document.getElementById('flasks-container');
+            const elementsContainer = document.getElementById('elements-container');
+            const mixBtn = document.getElementById('mix-btn');
+            const heatBtn = document.getElementById('heat-btn');
+            const coolBtn = document.getElementById('cool-btn');
+            const speedSlider = document.getElementById('speed-slider');
+            const tempSlider = document.getElementById('temp-slider');
+            const resetBtn = document.getElementById('reset-btn');
+            const mixtureList = document.getElementById('mixture-list');
+            const reactionEquation = document.getElementById('reaction-equation');
+            const outputInput = document.getElementById('output-input');
+            const submitOutput = document.getElementById('submit-output');
+             const stepDisplay = document.getElementById('step-display');
+            // State
+            let currentFlask = null;
+            let elementsInFlask = [];
+            let isMixing = false;
+            let mixingInterval = null;
+            let temperature = 25;
+            let speed = 5;
+            let particles = [];
+            let notes = [];
+            let dropperMode = false;
+            let activeDropper = null;
+            let selectedColor = "#00c6ff";
+            let selectedColorName = "Teal";
+            const colorsContainer = document.getElementById('colors-container');
+            const droppersContainer = document.getElementById('droppers-container');
+            const addDropperBtn = document.getElementById('add-dropper-btn');
+
+
+           // ===== ADD FLAME CONTROLLER HERE =====
+class FlameController {
+  constructor() {
+    this.burner = document.getElementById('burner');
+    this.flamesContainer = this.burner.querySelector('.flames-container');
+    this.isHeating = false;
+    this.heatLevel = 0;
+    
+    this.initFlames();
+  }
+
+  initFlames() {
+    // Create flame layers
+    const flameTypes = ['base', 'mid', 'tip'];
+    flameTypes.forEach(type => {
+      const flame = document.createElement('div');
+      flame.className = `flame flame-${type}`;
+      this.flamesContainer.appendChild(flame);
+    });
+  }
+
+  toggleHeat() {
+    this.isHeating = !this.isHeating;
+    
+    if (this.isHeating) {
+      this.startHeating();
+    } else {
+      this.stopHeating();
+    }
+  }
+
+  startHeating() {
+    this.burner.classList.add('active');
+    this.heatInterval = setInterval(() => {
+      this.heatLevel = Math.min(this.heatLevel + 0.1, 1);
+      this.updateFlameIntensity();
+    }, 200);
+  }
+
+  stopHeating() {
+    clearInterval(this.heatInterval);
+    this.coolInterval = setInterval(() => {
+      this.heatLevel = Math.max(this.heatLevel - 0.1, 0);
+      this.updateFlameIntensity();
+      if (this.heatLevel <= 0) {
+        clearInterval(this.coolInterval);
+        this.burner.classList.remove('active');
+      }
+    }, 200);
+  }
+
+  updateFlameIntensity() {
+    if (this.heatLevel > 0.7) {
+      this.burner.classList.add('high-heat');
+    } else {
+      this.burner.classList.remove('high-heat');
+    }
+    
+    const scale = 0.8 + (this.heatLevel * 0.5);
+    this.flamesContainer.style.transform = `translateX(-50%) scaleY(${scale})`;
+  }
+}
+
+
+         colorsContainer.addEventListener('click', function(e) {
+    if (e.target.classList.contains('color-item') && currentFlask) {
+        // Remove active class from all colors
+        document.querySelectorAll('.color-item').forEach(i => {
+            i.classList.remove('active');
+        });
+        
+        // Set clicked color as active
+        e.target.classList.add('active');
+        const colorHex = e.target.dataset.color;
+        const colorName = e.target.dataset.name;
+        
+        // Change the liquid color in the beaker
+        const content = currentFlask.querySelector('.flask-content');
+        content.style.backgroundColor = colorHex;
+        
+        // Add to experiment notes with the requested format
+        addNote(`The color of the reaction has been changed to ${colorName}`);
+        
+        // Visual feedback
+        e.target.style.transform = 'scale(1.15)';
+        setTimeout(() => {
+            e.target.style.transform = 'scale(1)';
+        }, 200);
+    } else if (!currentFlask) {
+        alert("Please add a flask first!");
+    }
+});
+
+
+
+
+
+
+            // Helper to clear all droppers' active state
+            function clearDropperActive() {
+                const allDroppers = droppersContainer.querySelectorAll('.dropper-item');
+                allDroppers.forEach(d => {
+                    d.style.backgroundColor = '';
+                    d.style.border = '';
+                });
+                document.body.style.cursor = '';
+                dropperMode = false;
+                activeDropper = null;
+            }
+
+            // Dropper click handler
+            function dropperClickHandler(e) {
+                const thisDropper = e.currentTarget;
+                const isActive = activeDropper === thisDropper;
+                clearDropperActive();
+                if (!isActive) {
+                    thisDropper.style.backgroundColor = 'rgba(0,198,255,0.18)';
+                    thisDropper.style.border = '2px solid #00c6ff';
+                    document.body.style.cursor = "url('https://cdn.jsdelivr.net/gh/ionicfirebaseapp/chem-icons@main/dropper-cursor.png'), auto";
+                    dropperMode = true;
+                    activeDropper = thisDropper;
+                }
+            }
+
+            // Attach click to initial dropper
+            const initialDropper = droppersContainer.querySelector('.dropper-item');
+            initialDropper.addEventListener('click', dropperClickHandler);
+
+            // Add Dropper button logic
+            addDropperBtn.addEventListener('click', function() {
+                const dropperName = prompt("Enter the dropper name:", "Dropper");
+                if (!dropperName) return;
+                const dropperDiv = document.createElement('div');
+                dropperDiv.className = 'item dropper-item';
+                dropperDiv.tabIndex = 0;
+                dropperDiv.innerHTML = `<i class="fas fa-eye-dropper" style="color:#00c6ff"></i><span>${dropperName}</span>`;
+                droppersContainer.appendChild(dropperDiv);
+                dropperDiv.addEventListener('click', dropperClickHandler);
+            });
+
+            // Make items draggable
+            const items = document.querySelectorAll('.item');
+            items.forEach(item => {
+                item.setAttribute('draggable', 'true');
+                item.addEventListener('dragstart', dragStart);
+            });
+
+            // Lab bench as drop zone
+            labBench.addEventListener('dragover', dragOver);
+            labBench.addEventListener('drop', drop);
+
+            // Button events
+            mixBtn.addEventListener('click', toggleMixing);
+            heatBtn.addEventListener('click', () => adjustTemperature(5));
+            coolBtn.addEventListener('click', () => adjustTemperature(-5));
+            resetBtn.addEventListener('click', resetExperiment);
+            submitOutput.addEventListener('click', submitReactionResult);
+            speedSlider.addEventListener('input', updateSpeed);
+            tempSlider.addEventListener('input', updateTemperature);
+
+            // Only allow dragging elements if a dropper is active
+            elementsContainer.addEventListener('mousedown', function(e) {
+                if (!dropperMode) {
+                    e.preventDefault();
+                }
+            }, true);
+
+            // Overwrite dragStart to check dropperMode
+            function dragStart(e) {
+                if (e.target.dataset.type === 'element' && !dropperMode) {
+                    e.preventDefault();
+                    return false;
+                }
+                e.dataTransfer.setData('type', e.target.dataset.type);
+                e.dataTransfer.setData('item', e.target.dataset.flask || e.target.dataset.element);
+                if (e.target.dataset.color) {
+                    e.dataTransfer.setData('color', e.target.dataset.color);
+                }
+            }
+
+            // Functions
+            function dragStart(e) {
+                e.dataTransfer.setData('type', e.target.dataset.type);
+                e.dataTransfer.setData('item', e.target.dataset.flask || e.target.dataset.element);
+                if (e.target.dataset.color) {
+                    e.dataTransfer.setData('color', e.target.dataset.color);
+                }
+            }
+
+            function dragOver(e) {
+                e.preventDefault();
+            }
+
+            function drop(e) {
+                e.preventDefault();
+                const type = e.dataTransfer.getData('type');
+                const item = e.dataTransfer.getData('item');
+                
+                if (type === 'flask') {
+                    placeFlask(item, e.clientX, e.clientY);
+                } else if (type === 'element' && currentFlask) {
+                    addElementToFlask(item, e.dataTransfer.getData('color'));
+                }
+            }
+
+            function placeFlask(type, x, y) {
+                // Remove existing flask
+                if (currentFlask) {
+                    currentFlask = flask;
+                    labBench.removeChild(currentFlask);
+                    elementsInFlask = [];
+                    updateMixtureList();
+                    resetControls();
+                }
+
+                // Always use beaker-flask for all types (including tube)
+                let flaskClass = 'beaker-flask';
+
+                const flask = document.createElement('div');
+                flask.className = `flask ${flaskClass}`;
+                flask.dataset.type = type;
+
+                // Position the flask near the drop coordinates
+                const rect = labBench.getBoundingClientRect();
+                const posX = x - rect.left - 60; // Half of flask width
+                const posY = y - rect.top - 90; // Half of flask height
+
+                flask.style.left = `${Math.max(10, Math.min(posX, rect.width - 130))}px`;
+                flask.style.top = `${Math.max(10, Math.min(posY, rect.height - 190))}px`;
+
+                // Add content area
+                const content = document.createElement('div');
+                content.className = 'flask-content';
+                content.style.height = '0%';
+                flask.appendChild(content);
+
+                // Add label
+                const label = document.createElement('div');
+                label.className = 'flask-label';
+                label.textContent = type.replace('-', ' ');
+                flask.appendChild(label);
+
+                // Make flask draggable
+                flask.addEventListener('mousedown', startDrag);
+
+                labBench.appendChild(flask);
+                currentFlask = flask;
+
+                // Enable element adding
+                const items = elementsContainer.querySelectorAll('.item');
+                items.forEach(item => {
+                    item.style.cursor = 'grab';
+                });
+
+                // Add note for flask addition
+                let flaskName = type.replace('-', ' ');
+                addNote(`${flaskName.charAt(0).toUpperCase() + flaskName.slice(1)} flask has been added`);
+            }
+
+            function startDrag(e) {
+                if (e.target !== currentFlask) return;
+                
+                const startX = e.clientX;
+                const startY = e.clientY;
+                const startLeft = parseInt(currentFlask.style.left) || 0;
+                const startTop = parseInt(currentFlask.style.top) || 0;
+                
+                function drag(e) {
+                    const rect = labBench.getBoundingClientRect();
+                    const newLeft = startLeft + e.clientX - startX;
+                    const newTop = startTop + e.clientY - startY;
+                    
+                    currentFlask.style.left = `${Math.max(10, Math.min(newLeft, rect.width - 130))}px`;
+                    currentFlask.style.top = `${Math.max(10, Math.min(newTop, rect.height - 190))}px`;
+                }
+                
+                function stopDrag() {
+                    document.removeEventListener('mousemove', drag);
+                    document.removeEventListener('mouseup', stopDrag);
+                }
+                
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+            }
+
+            function addElementToFlask(element, color) {
+    if (!currentFlask) return;
+
+    let quantity = "";
+    const elementName = getElementName(element);
+    // Prompt for quantity for every flask type
+    while (true) {
+        quantity = prompt(`Enter the quantity (ml) for ${elementName}:`, "10");
+        if (quantity === null) return; // Cancelled
+        quantity = quantity.trim();
+        if (/^\d+(\.\d+)?$/.test(quantity)) {
+            break;
+        } else {
+            setTimeout(() => alert("Please enter a valid number for quantity."), 0);
+        }
+    }
+
+    elementsInFlask.push(element);
+
+    const content = currentFlask.querySelector('.flask-content');
+    let currentPercent = parseFloat(content.style.height) || 0;
+    const newPercent = Math.min(90, currentPercent + 15);
+    content.style.height = `${newPercent}%`;
+
+    blendColors(color);
+
+    const label = currentFlask.querySelector('.flask-label');
+    label.textContent = `${currentFlask.dataset.type.replace('-', ' ')} (${elementsInFlask.length} elements)`;
+
+    updateMixtureList();
+
+    mixBtn.disabled = false;
+    heatBtn.disabled = false;
+    coolBtn.disabled = false;
+    speedSlider.disabled = false;
+    tempSlider.disabled = false;
+
+    // Always show note with quantity
+    addNote(`${elementName} of ${quantity}ml has been added`);
+}
+
+function getElementName(symbol) {
+    const elements = {
+        H: "Hydrogen",
+        O: "Oxygen",
+        Na: "Sodium",
+        Cl: "Chlorine",
+        C: "Carbon",
+        Fe: "Iron"
+    };
+    return elements[symbol] || symbol;
+}
+
+            function blendColors(newColor) {
+                const content = currentFlask.querySelector('.flask-content');
+                const currentColor = content.style.backgroundColor || 'rgba(255, 255, 255, 0.2)';
+                
+                // Simple color mixing - in a real app you'd use a proper color mixing algorithm
+                const hexColor = newColor || '#ffffff';
+                const r = parseInt(hexColor.substr(1, 2), 16);
+                const g = parseInt(hexColor.substr(3, 2), 16);
+                const b = parseInt(hexColor.substr(5, 2), 16);
+                
+                const currentBg = currentColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                let newR = r, newG = g, newB = b;
+                
+                if (currentBg) {
+                    newR = Math.floor((parseInt(currentBg[1]) + r) / 2);
+                    newG = Math.floor((parseInt(currentBg[2]) + g) / 2);
+                    newB = Math.floor((parseInt(currentBg[3]) + b) / 2);
+                }
+                
+                content.style.backgroundColor = `rgba(${newR}, ${newG}, ${newB}, 0.7)`;
+            }
+
+            function updateMixtureList() {
+                if (elementsInFlask.length === 0) {
+                    mixtureList.innerHTML = '<p class="empty-message">No elements added yet</p>';
+                    return;
+                }
+                
+                // Count elements
+                const elementCounts = {};
+                elementsInFlask.forEach(el => {
+                    elementCounts[el] = (elementCounts[el] || 0) + 1;
+                });
+                
+                // Update list
+                mixtureList.innerHTML = '';
+                for (const [el, count] of Object.entries(elementCounts)) {
+                    const item = document.createElement('div');
+                    item.className = 'element-item';
+                    item.innerHTML = `<span>${el}</span><span>${count} atom${count > 1 ? 's' : ''}</span>`;
+                    mixtureList.appendChild(item);
+                }
+            }
+
+            function toggleMixing() {
+                
+                 if (isMixing) {
+                    stopMixing();
+                    mixBtn.innerHTML = '<i class="fas fa-blender"></i> Mix';
+                    submitOutput.disabled = false;
+                    outputInput.disabled = false;
+                }else {
+                    startMixing();
+                    mixBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+                    
+                    // Create and show stirring text
+                    const stirringText = document.createElement('div');
+                    stirringText.className = 'stirring-text';
+                    stirringText.textContent = 'Stirring...';
+                    labBench.appendChild(stirringText);
+                    
+                    // Remove after 4 seconds
+                    setTimeout(() => {
+                        if (stirringText.parentNode) {
+                            stirringText.parentNode.removeChild(stirringText);
+                        }
+                    }, 4000);
+                }
+                isMixing = !isMixing;
+            }
+
+            function startMixing() {
+                // Create particles based on elements
+                createParticles();
+                
+                // Start animation
+                mixingInterval = setInterval(() => {
+                    animateParticles();
+                    
+                    // Occasionally create bubbles
+                    if (Math.random() < 0.1 * speed/10) {
+                        createBubble();
+                    }
+                    
+                    // Change color slightly to simulate reaction
+                    if (Math.random() < 0.05 * speed/10) {
+                        const content = currentFlask.querySelector('.flask-content');
+                        const color = content.style.backgroundColor;
+                        if (color) {
+                            const colors = color.match(/\d+/g);
+                            if (colors) {
+                                const r = Math.min(255, parseInt(colors[0]) + Math.floor(Math.random() * 20 - 10));
+                                const g = Math.min(255, parseInt(colors[1]) + Math.floor(Math.random() * 20 - 10));
+                                const b = Math.min(255, parseInt(colors[2]) + Math.floor(Math.random() * 20 - 10));
+                                content.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.7)`;
+                            }
+                        }
+                    }
+                }, 1000/speed);
+            }
+
+            function stopMixing() {
+                clearInterval(mixingInterval);
+                
+                // Remove particles
+                particles.forEach(p => {
+                    if (p.element && p.element.parentNode) {
+                        p.element.parentNode.removeChild(p.element);
+                    }
+                });
+                particles = [];
+            }
+
+            function createParticles() {
+                if (!currentFlask) return;
+                
+                const flaskRect = currentFlask.getBoundingClientRect();
+                const content = currentFlask.querySelector('.flask-content');
+                const contentHeight = parseInt(content.style.height) / 100 * flaskRect.height;
+                
+                // Create particles for each element
+                elementsInFlask.forEach((el, i) => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.textContent = el;
+                    particle.style.color = getElementColor(el);
+                    particle.style.fontSize = `${Math.random() * 10 + 10}px`;
+                    
+                    // Position randomly within flask content
+                    const left = flaskRect.left + Math.random() * flaskRect.width;
+                    const top = flaskRect.bottom - contentHeight + Math.random() * contentHeight;
+                    
+                    particle.style.left = `${left}px`;
+                    particle.style.top = `${top}px`;
+                    
+                    document.body.appendChild(particle);
+                    
+                    particles.push({
+                        element: particle,
+                        x: left,
+                        y: top,
+                        vx: (Math.random() - 0.5) * speed,
+                        vy: (Math.random() - 0.5) * speed,
+                        el: el
+                    });
+                });
+            }
+
+            function animateParticles() {
+                const flaskRect = currentFlask.getBoundingClientRect();
+                const contentHeight = parseInt(currentFlask.querySelector('.flask-content').style.height) / 100 * flaskRect.height;
+                const contentTop = flaskRect.bottom - contentHeight;
+                
+                particles.forEach(p => {
+                    // Update position
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    // Boundary checks
+                    if (p.x < flaskRect.left || p.x > flaskRect.right) {
+                        p.vx *= -1;
+                        p.x = Math.max(flaskRect.left, Math.min(p.x, flaskRect.right));
+                    }
+                    
+                    if (p.y < contentTop || p.y > flaskRect.bottom) {
+                        p.vy *= -1;
+                        p.y = Math.max(contentTop, Math.min(p.y, flaskRect.bottom));
+                    }
+                    
+                    // Apply temperature effects
+                    if (temperature > 50) {
+                        p.vy -= 0.1; // Hot - particles rise
+                    } else if (temperature < 20) {
+                        p.vy += 0.1; // Cold - particles sink
+                    }
+                    
+                    // Update DOM
+                    p.element.style.left = `${p.x}px`;
+                    p.element.style.top = `${p.y}px`;
+                });
+            }
+
+            function createBubble() {
+                if (!currentFlask) return;
+                
+                const flaskRect = currentFlask.getBoundingClientRect();
+                const contentHeight = parseInt(currentFlask.querySelector('.flask-content').style.height) / 100 * flaskRect.height;
+                const contentTop = flaskRect.bottom - contentHeight;
+                
+                const bubble = document.createElement('div');
+                bubble.className = 'particle';
+                bubble.style.width = `${Math.random() * 10 + 5}px`;
+                bubble.style.height = bubble.style.width;
+                bubble.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+                bubble.style.borderRadius = '50%';
+                
+                const startX = flaskRect.left + Math.random() * flaskRect.width;
+                bubble.style.left = `${startX}px`;
+                bubble.style.top = `${flaskRect.bottom - 10}px`;
+                
+                document.body.appendChild(bubble);
+                
+                const bubbleObj = {
+                    element: bubble,
+                    x: startX,
+                    y: flaskRect.bottom - 10,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: - (Math.random() * 3 + 2)
+                };
+                
+                particles.push(bubbleObj);
+                
+                // Remove bubble after animation
+                setTimeout(() => {
+                    if (bubble.parentNode) {
+                        bubble.parentNode.removeChild(bubble);
+                    }
+                    particles = particles.filter(p => p !== bubbleObj);
+                }, 2000);
+            }
+
+            function adjustTemperature(change) {
+                temperature = Math.max(0, Math.min(100, temperature + change));
+                tempSlider.value = temperature;
+                
+                // Visual feedback
+                const content = currentFlask.querySelector('.flask-content');
+                if (temperature > 70) {
+                    content.style.boxShadow = '0 0 20px rgba(255, 100, 100, 0.7)';
+                } else if (temperature < 20) {
+                    content.style.boxShadow = '0 0 20px rgba(100, 100, 255, 0.5)';
+                } else {
+                    content.style.boxShadow = 'none';
+                }
+            }
+
+            function updateSpeed() {
+                speed = parseInt(speedSlider.value);
+                if (isMixing) {
+                    clearInterval(mixingInterval);
+                    mixingInterval = setInterval(() => {
+                        animateParticles();
+                    }, 1000/speed);
+                }
+            }
+
+            function updateTemperature() {
+                temperature = parseInt(tempSlider.value);
+                adjustTemperature(0); // Just for visual update
+            }
+
+            function resetExperiment() {
+                // Clear flask
+                if (currentFlask) {
+                    const content = currentFlask.querySelector('.flask-content');
+                    content.style.height = '0%';
+                    content.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                    content.style.boxShadow = 'none';
+                    
+                    const label = currentFlask.querySelector('.flask-label');
+                    label.textContent = `${currentFlask.dataset.type.replace('-', ' ')} (empty)`;
+                }
+                
+                // Clear state
+                elementsInFlask = [];
+                isMixing = false;
+                temperature = 25;
+                speed = 5;
+                
+                // Reset controls
+                resetControls();
+                
+                // Stop mixing
+                stopMixing();
+                
+                // Update UI
+                updateMixtureList();
+                reactionEquation.textContent = '';
+                outputInput.value = '';
+                speedSlider.value = speed;
+                tempSlider.value = temperature;
+            }
+
+            function resetControls() {
+                mixBtn.disabled = true;
+                heatBtn.disabled = true;
+                coolBtn.disabled = true;
+                speedSlider.disabled = true;
+                tempSlider.disabled = true;
+                submitOutput.disabled = true;
+                outputInput.disabled = true;
+            }
+
+            function submitReactionResult() {
+                const result = outputInput.value.trim();
+                if (!result) return;
+                
+                // Create reaction equation
+                const elementCounts = {};
+                elementsInFlask.forEach(el => {
+                    elementCounts[el] = (elementCounts[el] || 0) + 1;
+                });
+                
+                let reactants = '';
+                for (const [el, count] of Object.entries(elementCounts)) {
+                    if (reactants) reactants += ' + ';
+                    reactants += el;
+                    if (count > 1) reactants += count;
+                }
+                
+                reactionEquation.textContent = `${reactants} → ${result}`;
+                
+                // Visual feedback
+                const content = currentFlask.querySelector('.flask-content');
+                content.style.backgroundColor = '#a0e0a0';
+                content.style.boxShadow = '0 0 20px rgba(100, 255, 100, 0.5)';
+                
+                // Disable further changes
+                submitOutput.disabled = true;
+                outputInput.disabled = true;
+            }
+
+            function getElementColor(element) {
+                const elements = elementsContainer.querySelectorAll('.item[data-element]');
+                for (const el of elements) {
+                    if (el.dataset.element === element) {
+                        return el.dataset.color;
+                    }
+                }
+                return '#ffffff';
+            }
+
+            // Add Flask functionality
+            document.getElementById('add-flask-btn').onclick = function() {
+                const flaskName = prompt("Enter flask name (e.g., Custom Flask):", "");
+                if (!flaskName) return;
+                // Optional: Choose icon or type, here we use a default flask icon and type
+                const flaskType = 'custom-' + Math.random().toString(36).substr(2, 5);
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.setAttribute('data-type', 'flask');
+                div.setAttribute('data-flask', flaskType);
+                div.innerHTML = `<i class="fas fa-flask"></i><span>${flaskName}</span>`;
+                flasksContainer.appendChild(div);
+                // Make it draggable
+                div.setAttribute('draggable', 'true');
+                div.addEventListener('dragstart', dragStart);
+            };
+
+
+  // Handle color selection
+            colorsContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('color-item')) {
+                    // Remove active class from all colors
+                    document.querySelectorAll('.color-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    
+                    // Set clicked color as active
+                    e.target.classList.add('active');
+                    selectedColor = e.target.dataset.color;
+                    selectedColorName = e.target.dataset.name;
+                    
+                    // Add to experiment notes
+                  //  addNote(`Color changed to ${selectedColorName}`);
+                    
+                    // Visual feedback
+                    e.target.style.transform = 'scale(1.15)';
+                    setTimeout(() => {
+                        e.target.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            });
+            
+            // Add custom color functionality
+            document.getElementById('add-color-btn').addEventListener('click', function() {
+                const colorHex = prompt("Enter a color hex code (e.g., #FF5733):", "#");
+                if (!colorHex || !/^#[0-9A-F]{6}$/i.test(colorHex)) return;
+                
+                const colorName = prompt("Give this color a name (e.g., Coral):", "Custom");
+                if (!colorName) return;
+                
+                // Create new color item
+                const colorItem = document.createElement('div');
+                colorItem.className = 'color-item';
+                colorItem.style.backgroundColor = colorHex;
+                colorItem.dataset.color = colorHex;
+                colorItem.dataset.name = colorName;
+                
+                // Add to container
+                colorsContainer.appendChild(colorItem);
+                
+                // Select the new color
+                document.querySelectorAll('.color-item').forEach(i => i.classList.remove('active'));
+                colorItem.classList.add('active');
+                selectedColor = colorHex;
+                selectedColorName = colorName;
+                
+                // Add to experiment notes
+              //  addNote(`Added new color: ${colorName} (${colorHex})`);
+               // addNote(`Color changed to ${colorName}`);
+            });
+
+
+
+            // Add Element functionality
+            document.getElementById('add-element-btn').onclick = function() {
+                const symbol = prompt("Enter element symbol (e.g., Mg):", "");
+                if (!symbol) return;
+                const name = prompt("Enter element name (e.g., Magnesium):", "");
+                if (!name) return;
+                const color = prompt("Enter color hex code for the element (e.g., #bada55):", "#cccccc");
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.setAttribute('data-type', 'element');
+                div.setAttribute('data-element', symbol);
+                div.setAttribute('data-color', color);
+                div.innerHTML = `<i class="fas fa-circle" style="color: ${color}"></i><span>${name} (${symbol})</span>`;
+                elementsContainer.appendChild(div);
+                // Make it draggable
+                div.setAttribute('draggable', 'true');
+                div.addEventListener('dragstart', dragStart);
+            };
+
+            function addNote(stepText) {
+                notes.push(stepText);
+                renderNotes();
+                const stepNumber = notes.length;
+              const formattedStep = `Step ${stepNumber}: ${stepText}`;
+                sendStepAsArray(formattedStep, stepNumber);
+              //sendStepToBackend(stepText);
+
+              const stepDisplay = document.getElementById('step-display');
+      stepDisplay.textContent = `Step ${notes.length}: ${stepText}`;
+         stepDisplay.style.opacity = '1';
+    
+    // Hide after 2 seconds
+    setTimeout(() => {
+        stepDisplay.style.opacity = '0';
+    }, 2000);
+            }
+            function renderNotes() {
+                const notesList = document.getElementById('notes-list');
+                notesList.innerHTML = '';
+                notes.forEach((note, idx) => {
+                    const li = document.createElement('li');
+                    li.textContent = `Step ${idx + 1}: ${note}`;
+                    notesList.appendChild(li);
+                });
+            }
+
+       //reset event listeners
+       resetBtn.addEventListener('click', function(){
+         addNote('Flask has been emptied ');
+       })     
+
+            // Add notes for each button click
+            mixBtn.addEventListener('click', function() {
+                addNote('Mixing the Reaction');
+                toggleMixing();
+            });
+            const flameController = new FlameController();
+            heatBtn.addEventListener('click', function() {
+                //addNote('Heating the Reaction');
+                adjustTemperature(5);
+                 if (!currentFlask) {
+        alert("Please add a flask first!");
+        return;
+    }
+     if (!currentFlask) return;
+    
+    flameController.toggleHeat();
+    
+    if (flameController.isHeating) {
+        adjustTemperature(5);
+        addNote('Started heating');
+        heatBtn.innerHTML = '<i class="fas fa-fire"></i> Stop Heating';
+        heatBtn.style.backgroundColor = 'var(--danger)';
+    } else {
+        adjustTemperature(0); // Just for visual update
+        addNote('Stopped heating');
+        heatBtn.innerHTML = '<i class="fas fa-fire"></i> Heat';
+        heatBtn.style.backgroundColor = 'var(--accent)';
+    }
+    
+    // Get temperature
+    let temp = prompt("Set the temperature (in Fahrenheit):", "100");
+    if (temp === null) return; // User cancelled
+    
+    // Validate temperature input
+    while (isNaN(temp) || temp.trim() === "") {
+        temp = prompt("Please enter a valid number for temperature:", "100");
+        if (temp === null) return;
+    }
+    
+    // Get duration
+    let duration = prompt("Set the duration (in seconds):", "10");
+    if (duration === null) return; // User cancelled
+    
+    // Validate duration input
+    while (isNaN(duration) || duration.trim() === "" || parseFloat(duration) <= 0) {
+        duration = prompt("Please enter a valid positive number for duration:", "10");
+        if (duration === null) return;
+    }
+    addNote(`Heating to ${temp} Fahrenheit temperature has been set for ${duration} seconds`);
+ });
+
+            coolBtn.addEventListener('click', function() {
+               // addNote('Cooling the Reaction');
+                adjustTemperature(-5);
+
+
+
+                if (!currentFlask) {
+        alert("Please add a flask first!");
+        return;
+    }
+    
+    // Get temperature
+    let temp = prompt("Set the temperature for Cooling (in Fahrenheit):", "100");
+    if (temp === null) return; // User cancelled
+    
+    // Validate temperature input
+    while (isNaN(temp) || temp.trim() === "") {
+        temp = prompt("Please enter a valid number for temperature:", "100");
+        if (temp === null) return;
+    }
+    
+    // Get duration
+    let duration = prompt("Set the duration (in seconds):", "10");
+    if (duration === null) return; // User cancelled
+    
+    // Validate duration input
+    while (isNaN(duration) || duration.trim() === "" || parseFloat(duration) <= 0) {
+        duration = prompt("Please enter a valid positive number for duration:", "10");
+        if (duration === null) return;
+    }
+    addNote(`Cooling to ${temp} Fahrenheit temperature has been set for ${duration} seconds`);
+            });
+            submitOutput.addEventListener('click', function() {
+                const result = outputInput.value.trim();
+                if (!result) return;
+                addNote('Final Obtained Reaction is: ' + result);
+                submitReactionResult();
+            });
+        });
+    </script>
+  <script>
+   
+
+let experimentId = "";
+  let schoolName = "";
+  let wixDataReady = false;
+
+  window.addEventListener("message", function (event) {
+    const data = event.data;
+    console.log("📩 Received message from Wix:", data);
+
+    if (data && Array.isArray(data.records) && data.records.length > 0) {
+      const record = data.records[0];
+      experimentId = record.ExperimentId || "";
+      schoolName = record.schoolName || "";
+      wixDataReady = true;
+
+      console.log("✅ experimentId set:", experimentId);
+      console.log("✅ schoolName set:", schoolName);
+    } else {
+      console.warn("⚠️ No valid array received in data.records");
+    }
+  });
+
+  function sendStepAsArray(formattedStep, stepNumber) {
+    if (!wixDataReady) {
+      console.error("Wix data not yet received. Cannot send step.");
+      return;
+    }
+
+    const payload = {
+      ExperimentId: experimentId,
+      experiment_name: "",
+      equipments: "",
+      empid: "",
+      emprole: "",
+      employeename: "",
+      lab: "",
+      Class: "",
+      procedure: "",
+      outcome: "",
+      schoolName: schoolName,
+      Experimentsteps: formattedStep
+    };
+
+    console.log("📤 Sending payload:", payload);
+
+    fetch("https://prod-10.centralindia.logic.azure.com:443/workflows/496df60f238b439b818fe0f92c226ced/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=cKDdxg7TVUQ_DxzPTP7fICz4lgsV46sMJs9SB37eZwU", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    })
+      .then(res => res.text())
+      .then(text => {
+        try {
+          const data = JSON.parse(text);
+          console.log("✅ Step sent successfully:", data);
+        } catch (err) {
+          console.warn("⚠️ Non-JSON response:", text);
+        }
+      })
+      .catch(err => {
+        console.error("❌ Error sending step to backend:", err);
+      });
+  }
+  </script>
+</body>
+</html>

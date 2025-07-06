@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment Insight</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            background-color: #0d4484; 
+;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        .submit-btn {
+            background-color: #0d4484; 
+;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto 0;
+        }
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Experiment Insights</h1>
+    </div>
+    
+    <form id="experimentForm">
+        <div class="form-group">
+            <label for="lab-type">Type of Lab</label>
+            <select id="lab-type" name="lab-type" required>
+                <option value="">Select Lab</option>
+                <option value="Chemistry Lab">Chemistry Lab</option>
+                <option value="Physics Lab">Physics Lab</option>
+                <option value="Math Lab">Math Lab</option>
+                <option value="Biology Lab">Biology Lab</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="experiment-name">Name of the Experiment</label>
+            <input type="text" id="experiment-name" name="experiment-name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="equipments">Equipments used in the experiment</label>
+            <input type="text" id="equipments" name="equipments" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="procedure">Procedure</label>
+            <textarea id="procedure" name="procedure" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="outcome">Final Outcome</label>
+            <textarea id="outcome" name="outcome" required></textarea>
+        </div>
+        
+        <button type="submit" class="submit-btn">Submit</button>
+    </form>
+    <script>
+document.getElementById('experimentForm').onsubmit = function(e) {
+    e.preventDefault();
+    const data = {
+        labType: document.getElementById('lab-type').value,
+        experimentName: document.getElementById('experiment-name').value,
+        equipments: document.getElementById('equipments').value,
+        procedure: document.getElementById('procedure').value,
+        outcome: document.getElementById('outcome').value
+    };
+    window.parent.postMessage({ action: "navigation", data }, "*");
+    // Optionally, trigger Wix navigate action (handled in Wix Page Code)
+    // Example: window.parent.postMessage({ type: "navigate", url: "/target-page" }, "*");
+};
+</script>
+</body>
+</html>

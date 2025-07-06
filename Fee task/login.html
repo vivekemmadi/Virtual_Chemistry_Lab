@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IHM CONNECT - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    .main-container {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .left-panel {
+      flex: 1;
+      background-color: #3e737b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      min-width: 40%;
+      font-family: Georgia, 'Times New Roman', Times, serif;
+    }
+
+    .ihm-logo {
+      width: 300px;
+      height: auto;
+    }
+
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: #fff;
+      position: relative;
+      min-width: 60%;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .welcome {
+      font-size: 28px;
+      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .school-img-container {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0 25px;
+    }
+
+    .school-img {
+      width: 120px;
+      height: auto;
+      border-radius: 15px;
+    }
+
+    form {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid #3e737b;
+      border-radius: 10px;
+      background: #f8f9fa;
+      font-size: 16px;
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    .options input {
+      margin-right: 8px;
+    }
+
+    .login-btn {
+      position: relative;
+      width: 100%;
+      padding: 15px;
+      background: #3e737b;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .login-btn:hover {
+      background: #2d565d;
+    }
+
+    .btn-loader {
+      width: 20px;
+      height: 20px;
+      border: 3px solid #fff;
+      border-top: 3px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #loginMessage {
+      text-align: center;
+      color: red;
+      margin-bottom: 20px;
+      padding: 12px;
+      background: #ffeeee;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .social-icons i {
+      color: #3e737b;
+      font-size: 24px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .social-icons i:hover {
+      transform: scale(1.2);
+    }
+
+    .success-tick {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 60px;
+      font-weight: bold;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      animation: popFade 1s ease-out forwards;
+      display: none;
+    }
+
+    @keyframes popFade {
+      0% {
+        transform: translate(-50%, -50%) scale(0.3);
+        opacity: 0;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Mobile View */
+    @media screen and (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .left-panel {
+        display: none;
+      }
+
+      .right-panel {
+        padding: 40px 20px;
+        min-height: 100vh;
+        width: 100%;
+      }
+
+      .welcome {
+        font-size: 24px;
+      }
+
+      .school-img {
+        width: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="left-panel">
+      <!-- IHM Logo in left panel -->
+      <img src="https://static.wixstatic.com/media/c49abf_fa5c13f60e1040fca3b62aa1f4049400~mv2.png" alt="IHM CONNECT Logo" class="ihm-logo">
+    </div>
+
+    <div class="right-panel">
+      <div class="header">
+        <!-- Removed logo from right panel -->
+        <div class="welcome">School Login</div>
+        <div class="school-img-container">
+          <img src="https://i.pinimg.com/736x/51/6e/61/516e61e5066f69acde42ed246dc477af.jpg" alt="School Building" class="school-img" />
+        </div>
+      </div>
+
+      <form id="loginForm">
+        <input type="text" placeholder="Username" required id="username" />
+        <input type="password" placeholder="Password" required id="password" />
+
+        <div class="options">
+          <label><input type="checkbox"> Remember me</label>
+          <a href="#" style="text-decoration: none; color: #3e737b;">Forgot password?</a>
+        </div>
+        
+        <div id="loginMessage"></div>
+        
+        <button type="submit" class="login-btn" id="loginBtn">
+          <span class="btn-text">Login</span>
+          <span class="btn-loader"></span>
+        </button>
+
+        <div class="social-icons">
+          <i class="fab fa-twitter"></i>
+          <i class="fab fa-linkedin-in"></i>
+          <i class="fab fa-facebook-f"></i>
+          <i class="fab fa-google"></i>
+        </div>
+      </form>
+
+      <div id="successTick" class="success-tick">
+        ✓
+      </div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("loginForm");
+  const loginBtn = document.getElementById("loginBtn");
+  const btnText = loginBtn.querySelector('.btn-text');
+  const btnLoader = loginBtn.querySelector('.btn-loader');
+  const msgContainer = document.getElementById("loginMessage");
+  const successTick = document.getElementById("successTick");
+
+  // Handle form submission
+  loginForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+    
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    // Clear previous messages
+    msgContainer.style.display = "none";
+    msgContainer.textContent = "";
+
+    if (!username || !password) {
+      showMessage("Username and password are required.", "error");
+      return;
+    }
+
+    // Show loading state
+    btnText.style.display = "none";
+    btnLoader.style.display = "inline-block";
+
+    window.parent.postMessage(
+      {
+        type: "LOGIN_ATTEMPT",
+        username: username,
+        password: password
+      },
+      "*"
+    );
+  });
+
+  // Handle messages from parent window
+  window.addEventListener("message", function(event) {
+    const data = event.data;
+
+    if (data.type === "LOGIN_STATUS") {
+      const tick = document.getElementById("successTick");
+      
+      // Reset button state
+      btnLoader.style.display = "none";
+      btnText.style.display = "inline";
+
+      if (data.success) {
+        showMessage(data.message || "Login successful!", "success");
+        if (tick) {
+          tick.style.display = "flex";
+          setTimeout(() => {
+            tick.style.display = "none";
+          }, 2000);
+        }
+      } else {
+        showMessage(data.message || "The password you entered is incorrect.", "error");
+      }
+    }
+  });
+
+  // Helper function to show messages
+  function showMessage(message, type) {
+    msgContainer.textContent = message;
+    msgContainer.style.color = type === "success" ? "green" : "red";
+    msgContainer.style.backgroundColor = type === "success" ? "#eeffee" : "#ffeeee";
+    msgContainer.style.display = "block";
+    
+    // Auto-hide message after 5 seconds
+    setTimeout(() => {
+      msgContainer.style.display = "none";
+    }, 3000);
+  }
+});
+</script>
+</body>
+</html>

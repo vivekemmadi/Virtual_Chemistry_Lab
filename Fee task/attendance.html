@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f8fa;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+        .table-container {
+            max-height: calc(100vh - 50px);
+            overflow-y: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            padding: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            color: #333;
+        }
+        th {
+            background-color: #009688;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f7f7f7;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        tr.selected {
+            background-color: #80e27e; /* Green background for selected rows */
+            transition: background-color 0.3s ease;
+        }
+        td {
+            vertical-align: middle;
+        }
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .custom-checkbox {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        input[type="checkbox"]:checked {
+            background-color: #009688;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            .table-container {
+                padding: 0;
+            }
+            table {
+                width: 100%;
+                font-size: 12px;
+            }
+            th, td {
+                padding: 6px 10px;
+            }
+            th {
+                font-size: 12px;
+                text-align: center;
+            }
+            td {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Student Name</th>
+                    <th>Student ID</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let category = "";
+        let date = "";
+        let teacher = "";
+      	let school ="";
+      	let className="";
+      	let section="";
+
+        window.addEventListener("message", (event) => {
+            if (event.data.action === "updateTable") {
+                category = event.data.category;
+                date = event.data.date;
+                teacher = event.data.teacher;
+              	school = event.data.school;
+              	className = event.data.className;
+              	section = event.data.section;
+                updateTable(event.data.records);
+            } else if (event.data.action === "getSelectedRows") {
+                sendSelectedRows();
+            } else if(event.data.action ==="clearTable"){
+              	clearTable();
+            }
+        });
+
+        function updateTable(records) {
+            let tableBody = document.getElementById("tableBody");
+            tableBody.innerHTML = "";
+
+            records.forEach((record, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td class="custom-checkbox">
+                        <input type="checkbox" class="selectRow">
+                    </td>
+                    <td>${record.cr726_studentname}</td>
+                    <td>${record.cr726_studentid}</td>
+                `;
+
+                // Add click event to select the row
+                row.addEventListener("click", () => {
+                    toggleRowSelection(row);
+                });
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function toggleRowSelection(row) {
+            const checkbox = row.querySelector(".selectRow");
+
+            // Toggle selection state
+            if (row.classList.contains("selected")) {
+                row.classList.remove("selected");
+                checkbox.checked = false;
+            } else {
+                row.classList.add("selected");
+                checkbox.checked = true;
+            }
+        }
+
+        function sendSelectedRows() {
+            let selectedRows = [];
+            document.querySelectorAll(".selectRow:checked").forEach((checkbox) => {
+                let row = checkbox.closest("tr");
+                let rowData = {
+                    date: date,
+                    name: row.cells[1].textContent,
+                    loginId: row.cells[2].textContent,
+                    Category: category,
+                    teacherLoginId: teacher,
+                  	school:school,
+                  	class:className,
+                  	section:section,
+                };
+                selectedRows.push(rowData);
+            });
+
+            window.parent.postMessage({ action: "selectedRows", data: selectedRows }, "*");
+        }
+      	function clearTable() {
+            let tableBody = document.getElementById("tableBody");
+            tableBody.innerHTML = ""; // Clear the table content
+        }
+    </script>
+</body>
+</html>
+
+
+wix <code>
+    import { fetch } from 'wix-fetch';
+import wixStorage from 'wix-storage';
+import wixLocation from 'wix-location';
+
+$w.onReady(function () {
+    // Retrieve the teacher object from session storage.
+    const teacherData = wixStorage.session.getItem("teacherData");
+    if (!teacherData) {
+        wixLocation.to("/teachers-login");
+        return;
+    }
+    const teacherObj = JSON.parse(teacherData);
+    const TeacherLoginId = teacherObj.login;
+    const School = teacherObj.school;
+    // (If needed you could also extract subject from teacherObj)
+    
+    console.log("School:", School);
+    console.log("Teacher Login:", TeacherLoginId);
+
+    // Disable exam and section dropdowns initially.
+    $w("#dropdown1").disable(); // Exam dropdown
+    $w("#dropdown3").disable(); // Section dropdown
+
+    
+    
+
+    // API URLs.
+    let apiUrl = "https://prod-28.centralindia.logic.azure.com:443/workflows/36abed7febc043f0beabe0e09814fb3d/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EUppnkCJm5Ltd4odAapJuigyz66Eca3iGZA_jzOAQ08";
+    let anotherApiUrl = "backendUrl";
+
+    // Static choices.
+    let classChoices = {
+        "SPR High School KMR": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "NURSURY", "LKG", "UKG"],
+        "Blooming Dales High School": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "NURSURY", "LKG", "UKG"],
+        "Northfield International School": ["1", "2", "3", "4", "5", "6", "7", "8"],
+        "Kosmos Global School": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "NURSURY", "LKG", "UKG"],
+        "SPR High School GTKSR":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "NURSURY", "LKG", "UKG"]
+    };
+    
+    let sectionChoices = {
+        "SPR High School KMR": {
+            "1": ["ABHIMANYU", "EKALAVYA"],
+            "2": ["ASHOKA CHAKRAVARTHI", "DHRUVA KUMARA"],
+            "3": ["BHAGEERATHA", "BHAKTA PRABALLADA", "SHRAVANA KUMARA"],
+            "4": ["ALLURI SITA RAMARAJU", "BALA GANGADHAR TILAK", "MAHA RANA PRATHAP"],
+            "5": ["APJ ABDUL KALAM", "CHANAKYA", "CHANDRA SHEKAR AZAD", "CV RAMAN", "SUBASH CHANDRA BOSE"],
+            "6": ["ARJUNA", "ARYABHATTA", "CHATRAPATHI SHIVAJI", "DAYANANDA SARASWATHI", "KALPANA CHAWLA"],
+            "7": ["ARABINDO GHOSH", "SISTER NIVEDITHA", "SRI GURUJI", "VALMIKI", "VEDAVYASA"],
+            "8": ["BHAGATH SINGH", "HEDGEWAR", "LAL BAHADUR SASTRI", "RANI RUDRAMA DEVI", "VINOBA BHAVE"],
+            "9": ["BIPIN  PAL", "SRINIVASA RAMANUJAN", "SWAMY VIVEKANANDA"],
+            "10": ["JANSI LAXMCHANDRAI BHAI", "SARDAR VALLABHAI PATEL", "SUSRUTHA", "VEERA SAVARKAR"],
+            "NURSURY": [""],
+            "LKG": ["CHOTA BHEEM"],
+            "UKG": ["BALA GANESH"],
+        },
+        "Blooming Dales High School": {
+            "1": ["A", "B", "C"],
+            "2": ["A", "B", "C"],
+            "3": ["A", "B", "C"],
+            "4": ["A", "B", "C"],
+            "5": ["A", "B", "C"],
+            "6": ["A", "B", "C"],
+            "7": ["A", "B", "C"],
+            "8": ["A", "B", "C"],
+            "9": ["A", "B"],
+            "10": ["A", "B"],
+            "NURSURY": [""],
+            "LKG": ["A", "B", "C"],
+            "UKG": ["A", "B", "C"],
+        },
+        "Northfield International School": {
+            "1": ["A", "B", "C"],
+            "2": ["A", "B", "C"],
+            "3": ["A", "B", "C"],
+            "4": ["A", "B", "C"],
+            "5": ["A", "B", "C"],
+            "6": ["A", "B", "C"],
+            "7": ["A", "B", "C"],
+            "8": ["A", "B", "C"],
+        },
+        "Kosmos Global School": {
+            "1": ["A", "B", "C"],
+            "2": ["A", "B", "C"],
+            "3": ["A", "B", "C"],
+            "4": ["A", "B", "C"],
+            "5": ["A", "B", "C"],
+            "6": ["A", "B", "C"],
+            "7": ["A", "B", "C"],
+            "8": ["A", "B", "C"],
+            "9": ["A", "B"],
+            "10": ["A", "B"],
+            "NURSURY": [""],
+            "LKG": ["A", "B", "C"],
+            "UKG": ["A", "B", "C"],
+        },
+        "SPR High School GTKSR": {
+            "1": ["A", "B", "C","D"],
+            "2": ["A", "B", "C","D"],
+            "3": ["A", "B", "C","D"],
+            "4": ["A", "B", "C","D"],
+            "5": ["A", "B", "C","D"],
+            "6": ["A", "B", "C","D"],
+            "7": ["A", "B", "C","D"],
+            "8": ["A", "B", "C","D"],
+            "9": ["A", "B","C","D"],
+            "10": ["A", "B","C","D"],
+            "NURSURY": [""],
+            "LKG": ["A", "B", "C"],
+            "UKG": ["A", "B", "C"],
+        },
+    };
+
+    let examChoices = {
+        "SPR High School KMR": ["Absentee", "Late Comer", "No Uniform", "Permission to Leave Early", "Miscommunication"],
+        "Blooming Dales High School": ["Absentee", "Late Comer", "No Uniform", "Permission to Leave Early", "Miscommunication"],
+        "Northfield International School": ["Absentee", "Late Comer", "No Uniform", "Permission to Leave Early", "Miscommunication"],
+        "Kosmos Global School": ["Absentee", "Late Comer", "No Uniform", "Permission to Leave Early", "Miscommunication"],
+        "SPR High School GTKSR" :["Absentee", "Late Comer", "No Uniform", "Permission to Leave Early", "Miscommunication"],
+    };
+
+    
+
+    // For non-admin teachers, restrict class choices to those defined in teacher data.
+    // (If teacherObj.role is defined and is not "ADMIN", we use only teacherObj.classes keys.)
+    if (teacherObj && teacherObj.role && teacherObj.role !== "ADMIN") {
+        let teacherClassOptions = Object.keys(teacherObj.classes);
+        classChoices[School] = teacherClassOptions;
+    }
+
+    // Populate the Class dropdown (#dropdown2) with the filtered or static choices.
+    if (classChoices[School]) {
+        let options = classChoices[School].map(i => ({ label: i, value: i }));
+        $w("#dropdown2").options = options;
+    } else {
+        console.log("No class choices available for this school.");
+    }
+
+    // When the Class dropdown changes, update the Section dropdown.
+    $w("#dropdown2").onChange(() => {
+        let selectedClass = $w("#dropdown2").value;
+        if (teacherObj && teacherObj.role && teacherObj.role !== "ADMIN") {
+            // Use teacher's section data for the selected class.
+            if (teacherObj.classes[selectedClass]) {
+                let teacherSectionOptions = Object.keys(teacherObj.classes[selectedClass]);
+                let sectionOptions = teacherSectionOptions.map(i => ({ label: i, value: i }));
+                $w("#dropdown3").options = sectionOptions;
+                $w("#dropdown3").enable();
+            } else {
+                console.log("No section options available for this class in teacher data.");
+                $w("#dropdown3").disable();
+            }
+        } else {
+            // Otherwise use static section choices.
+            if (sectionChoices[School] && sectionChoices[School][selectedClass]) {
+                let sectionOptions = sectionChoices[School][selectedClass].map(i => ({ label: i, value: i }));
+                $w("#dropdown3").options = sectionOptions;
+                $w("#dropdown3").enable();
+            } else {
+                console.log("No section options available for this class.");
+                $w("#dropdown3").disable();
+            }
+        }
+    });
+
+    // When the Section dropdown changes, update the Exam dropdown.
+    // Note: Exam options remain the same for all users.
+    $w("#dropdown3").onChange(() => {
+        let selectedSection = $w("#dropdown3").value;
+        if (selectedSection) {
+            let examOptions = examChoices[School].map(i => ({ label: i, value: i }));
+            $w("#dropdown1").options = examOptions;
+            $w("#dropdown1").enable();
+        } else {
+            console.log("No exam options available for this section.");
+            $w("#dropdown1").disable();
+        }
+    });
+
+    // When an Exam is selected, fetch student records.
+    $w("#dropdown1").onChange(() => {
+        let selectedDate = formatDate($w("#datePicker1").value);
+        let selectedExam = $w("#dropdown1").value;
+        let selectedClass = $w("#dropdown2").value;
+        let selectedSection = $w("#dropdown3").value;
+
+        const requestData = {
+            tableName: "Student Master",
+            schoolName: School,
+            className: selectedClass,
+            section: selectedSection,
+            studentLoginId: "",
+            examName: ""
+        };
+
+        fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Response Data:", data);
+            if (!data.records || data.records.length === 0) {
+                $w("#text1").text = "No students found.";
+                return;
+            }
+            $w("#html1").postMessage({
+                action: "updateTable",
+                records: data.records,
+                category: selectedExam,
+                date: selectedDate,
+                teacher: TeacherLoginId,
+                school: School,
+                className: selectedClass,
+                section: selectedSection
+            });
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            $w("#text1").text = "Failed to load results.";
+        });
+    });
+
+    // Button to request selected rows from the HTML component.
+    $w("#button1").onClick(() => {
+        $w("#html1").postMessage({ action: "getSelectedRows" });
+    });
+
+    // Handle messages from the HTML component (e.g., selected rows).
+    $w("#html1").onMessage((event) => {
+        if (event.data && event.data.action === "selectedRows") {
+            const selectedRows = event.data.data;
+            console.log(selectedRows);
+            if (selectedRows.length === 0) {
+                console.log("No rows selected.");
+                return;
+            }
+            fetch(anotherApiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(selectedRows)
+            });
+            $w("#text1").text = "Submitted Successfully!";
+            $w("#dropdown2").value = null;
+            $w("#dropdown3").value = null;
+            $w("#dropdown1").value = null;
+            $w("#dropdown3").disable();
+            $w("#dropdown1").disable();
+            $w("#html1").postMessage({ action: "clearTable" });
+        }
+    });
+
+    // Helper function to format the date.
+    function formatDate(date) {
+        let d = new Date(date);
+        let year = d.getFullYear();
+        let month = ("0" + (d.getMonth() + 1)).slice(-2);
+        let day = ("0" + d.getDate()).slice(-2);
+        return `${year}-${month}-${day}`;
+    }
+});
+
+</code>

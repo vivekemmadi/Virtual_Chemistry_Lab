@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leave Approval Table with Undo and View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Playfair Display', serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+    }
+
+    h1 {
+      background-color: #0d4484;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+    table {
+      width: 95%;
+      margin: 30px auto;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      border: 1px solid #0a509f;
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #0d4484;
+      color: white;
+    }
+
+    button {
+      padding: 6px 12px;
+      font-family: 'Playfair Display', serif;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .approve {
+      background-color: #28a745;
+    }
+
+    .reject {
+      background-color: #dc3545;
+      margin-left: 5px;
+    }
+
+    .view {
+      background-color: #007bff;
+    }
+
+    .undo-box {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #0d4484;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      display: none;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .undo-box button {
+      margin-left: 15px;
+      background-color: #ffc107;
+      color: black;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #0a509f;
+      width: 50%;
+      font-family: 'Playfair Display', serif;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+      color: #0d4484;
+    }
+
+    .close {
+      float: right;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Leave Approval System</h1>
+
+  <table id="leaveTable">
+    <thead>
+      <tr>
+        <th>Employee ID</th>
+        <th>Employee Name</th>
+        <th>Leave Type</th>
+        <th>Leave Category</th>
+        <th>Reason</th>
+        <th>No. of Days</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="undo-box" id="undoBox">
+    Action performed. <button onclick="undoDelete()">Undo</button>
+  </div>
+
+  <div id="reasonModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3>Reason for Leave</h3>
+      <p id="reasonText"></p>
+    </div>
+  </div>
+
+  <script>
+    let lastDeletedRow = null;
+    let lastDeletedIndex = null;
+    let undoTimer = null;
+    const currentUserRole = 'Principal'; // You can make this dynamic if needed
+    let leaveDataFromBackend = [];
+
+    window.addEventListener("message", (event) => {
+      const { action, data } = event.data;
+      if (action === "loadLeaveData" && Array.isArray(data)) {
+        leaveDataFromBackend = data;
+        fetchAndDisplayLeaves();
+      }
+    });
+
+    function fetchAndDisplayLeaves() {
+      const tableBody = document.querySelector('#leaveTable tbody');
+      tableBody.innerHTML = ''; // Clear existing rows
+
+      leaveDataFromBackend.forEach(leave => {
+        if (leave.approverRole === currentUserRole) {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${leave.empId}</td>
+            <td>${leave.name}</td>
+            <td>${leave.type}</td>
+            <td>${leave.category}</td>
+            <td><button class="view" onclick="viewReason('${leave.reason}')">View</button></td>
+            <td>${leave.days}</td>
+            <td>
+              <button class="approve" onclick="handleAction(this, 'Approved')">Approve</button>
+              <button class="reject" onclick="handleAction(this, 'Rejected')">Reject</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        }
+      });
+    }
+
+    function handleAction(button, action) {
+      const row = button.closest('tr');
+      const tableBody = document.querySelector('#leaveTable tbody');
+
+      lastDeletedIndex = Array.from(tableBody.rows).indexOf(row);
+      lastDeletedRow = row.cloneNode(true);
+
+      row.remove();
+      showUndo();
+
+      console.log(`Leave ${action} for ${row.cells[1].textContent}`);
+    }
+
+    function showUndo() {
+      const undoBox = document.getElementById('undoBox');
+      undoBox.style.display = 'block';
+
+      clearTimeout(undoTimer);
+      undoTimer = setTimeout(() => {
+        undoBox.style.display = 'none';
+        lastDeletedRow = null;
+        lastDeletedIndex = null;
+      }, 5000);
+    }
+
+    function undoDelete() {
+      if (lastDeletedRow !== null && lastDeletedIndex !== null) {
+        const tableBody = document.querySelector('#leaveTable tbody');
+        if (lastDeletedIndex >= tableBody.rows.length) {
+          tableBody.appendChild(lastDeletedRow);
+        } else {
+          tableBody.insertBefore(lastDeletedRow, tableBody.rows[lastDeletedIndex]);
+        }
+      }
+      document.getElementById('undoBox').style.display = 'none';
+      clearTimeout(undoTimer);
+    }
+
+    function viewReason(reasonText) {
+      document.getElementById('reasonText').textContent = reasonText;
+      document.getElementById('reasonModal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('reasonModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('reasonModal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    }
+  </script>
+
+</body>
+</html>

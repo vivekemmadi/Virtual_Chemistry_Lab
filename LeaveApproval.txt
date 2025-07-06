@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leave & Attendance Approval</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Playfair Display', serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+    }
+
+    h1 {
+      background-color: #0d4484;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .top-buttons {
+      margin: 20px;
+    }
+
+    button {
+      font-family: 'Playfair Display', serif;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: box-shadow 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .top-buttons button {
+      background-color: #0d4484;
+      color: white;
+      padding: 10px 20px;
+      margin-right: 10px;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 95%;
+      margin: 30px auto;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      border: 1px solid #0a509f;
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #0d4484;
+      color: white;
+    }
+
+    .approve { background-color: #28a745; color: white; }
+    .reject { background-color: #dc3545; color: white; margin-left: 5px; }
+    .view { background-color: #007bff; color: white; }
+
+    button:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .undo-box {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #0d4484;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      display: none;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .undo-box button {
+      margin-left: 15px;
+      background-color: #ffc107;
+      color: black;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #0a509f;
+      width: 50%;
+      font-family: 'Playfair Display', serif;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+      color: #0d4484;
+    }
+
+    .close {
+      float: right;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Approval System</h1>
+
+<div class="top-buttons">
+  <button onclick="toggleLeaveTable()">Leave Approval</button>
+  <button onclick="toggleAttendanceTable()">Attendance Regulatory</button>
+</div>
+
+<table id="leaveTable">
+  <thead>
+    <tr>
+      <th>Leave ID</th>
+      <th>Employee ID</th>
+      <th>Employee Name</th>
+      <th>Leave Type</th>
+      <th>Leave Category</th>
+      <th>From Date</th>
+      <th>To Date</th>
+      <th>No of Days</th>
+      <th>Reason</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<table id="attendanceTable" style="display: none;">
+  <thead>
+    <tr>
+      <th>Leave ID</th>
+      <th>Emp ID</th>
+      <th>Emp Name</th>
+      <th>Type</th>
+      <th>Time</th>
+      <th>Reason</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<div class="undo-box" id="undoBox">
+  Action performed. <button onclick="undoDelete()">Undo</button>
+</div>
+
+<div id="reasonModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h3>Reason for Leave</h3>
+    <p id="reasonText"></p>
+  </div>
+</div>
+
+<script>
+  let currentUserRole = "";
+  let leaveDataFromBackend = [];
+  let lastDeletedRow = null;
+  let lastDeletedIndex = null;
+  let undoTimer = null;
+  let attendanceLoaded = false;
+
+  window.addEventListener("message", (event) => {
+    const data = event.data;
+    if (!data) return;
+
+    if (data.employeerole) currentUserRole = data.employeerole;
+
+    if (data.action === "displayDetails") {
+      leaveDataFromBackend = data.records?.value || [];
+      if (document.getElementById("leaveTable").style.display !== "none") {
+        fetchAndDisplayLeaves();
+      }
+    }
+  });
+
+  function toggleLeaveTable() {
+    document.getElementById('leaveTable').style.display = 'table';
+    document.getElementById('attendanceTable').style.display = 'none';
+    fetchAndDisplayLeaves();
+  }
+
+  function toggleAttendanceTable() {
+    document.getElementById('leaveTable').style.display = 'none';
+    document.getElementById('attendanceTable').style.display = 'table';
+    if (!attendanceLoaded) {
+      renderAttendanceTable();
+      attendanceLoaded = true;
+    }
+  }
+
+  function fetchAndDisplayLeaves() {
+    const tableBody = document.querySelector('#leaveTable tbody');
+    tableBody.innerHTML = '';
+    let anyMatch = false;
+
+    leaveDataFromBackend.forEach(leave => {
+      const type = (leave.cr473_regtype || "").toLowerCase();
+      const userRole = (currentUserRole || '').toLowerCase();
+
+      if ((type === "single day" || type === "multiple day") && userRole === currentUserRole.toLowerCase()) {
+        anyMatch = true;
+        const approvalStatus = leave.cr473_approval_status;
+        let actionContent = '';
+
+        if (approvalStatus === 'Approved') {
+          actionContent = '<span style="color: green; font-weight: bold;">Approved</span>';
+        } else if (approvalStatus === 'Rejected') {
+          actionContent = '<span style="color: red; font-weight: bold;">Rejected</span>';
+        } else {
+          actionContent = `
+            <button class="approve" onclick="handleAction(this, 'Approved')">Approve</button>
+            <button class="reject" onclick="handleAction(this, 'Rejected')">Reject</button>
+          `;
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${leave.cr473_leave_id || ''}</td>
+          <td>${leave.cr473_employeeid}</td>
+          <td>${leave.cr473_employeename}</td>
+          <td>${leave.cr473_regtype}</td>
+          <td>${leave.cr473_leave_category || ''}</td>
+          <td>${leave.cr473_date_from?.split('T')[0]}</td>
+          <td>${leave.cr473_date_to?.split('T')[0]}</td>
+          <td>${leave.cr473_noofdays}</td>
+          <td><button class="view" onclick="viewReason('${leave.cr473_reason || ''}')">View</button></td>
+          <td>${actionContent}</td>
+        `;
+        tableBody.appendChild(row);
+      }
+    });
+
+    if (!anyMatch) {
+      tableBody.innerHTML = `<tr><td colspan="10">No leave requests for your role.</td></tr>`;
+    }
+  }
+
+  function renderAttendanceTable() {
+    const tableBody = document.querySelector('#attendanceTable tbody');
+    tableBody.innerHTML = '';
+    let anyRow = false;
+
+    leaveDataFromBackend.forEach(leave => {
+      const type = (leave.cr473_regtype || "").toLowerCase();
+      const role = (leave.cr473_approverrole || "").toLowerCase();
+
+      if ((type === "check-in" || type === "check-out") && role === currentUserRole.toLowerCase()) {
+        anyRow = true;
+        const approvalStatus = leave.cr473_approval_status;
+        let actionContent = '';
+
+        if (approvalStatus === 'Approved') {
+          actionContent = '<span style="color: green; font-weight: bold;">Approved</span>';
+        } else if (approvalStatus === 'Rejected') {
+          actionContent = '<span style="color: red; font-weight: bold;">Rejected</span>';
+        } else {
+          actionContent = `
+            <button class="approve" onclick="handleAction(this, 'Approved')">Approve</button>
+            <button class="reject" onclick="handleAction(this, 'Rejected')">Reject</button>
+          `;
+        }
+
+        const row = document.createElement('tr');
+row.innerHTML = `
+  <td>${leave.cr473_leave_id || ''}</td>  
+  <td>${leave.cr473_employeeid}</td>
+  <td>${leave.cr473_employeename}</td>
+  <td>${leave.cr473_regtype}</td>
+  <td>${leave.cr473_time2 || ''}</td>
+  <td><button class="view" onclick="viewReason('${leave.cr473_reason || ''}')">View</button></td>
+  <td>${actionContent}</td>
+</tr>`;
+        tableBody.appendChild(row);
+      }
+    });
+
+    if (!anyRow) {
+      tableBody.innerHTML = `<tr><td colspan="6">No attendance records for your role.</td></tr>`;
+    }
+  }
+
+  function handleAction(button, action) {
+    const row = button.closest('tr');
+    const tableBody = row.closest('tbody');
+    const leaveId = row.cells[0].textContent;
+    const empId = row.cells[1].textContent;
+    const empName = row.cells[2].textContent;
+
+    const payload = {
+      type: "update",
+      leave_id: leaveId,
+      empid :empId,
+      employeeName: empName,
+      approval_status: action
+    };
+
+    fetch('https://prod-16.centralindia.logic.azure.com:443/workflows/1ee5dc7fa2b847429161c0e0920bafd2/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=28NhaEGVyENrM1iOBYUw9mqqAI3MsR5J4HSWz9qkSBQ', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    console.log("Payload sent:", payload);
+
+    lastDeletedIndex = Array.from(tableBody.rows).indexOf(row);
+    lastDeletedRow = row.cloneNode(true);
+    row.remove();
+
+    showUndo();
+  }
+
+  function showUndo() {
+    const undoBox = document.getElementById('undoBox');
+    undoBox.style.display = 'block';
+
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => {
+      undoBox.style.display = 'none';
+      lastDeletedRow = null;
+      lastDeletedIndex = null;
+    }, 5000);
+  }
+
+  function undoDelete() {
+    if (lastDeletedRow && lastDeletedIndex !== null) {
+      let tableBody = document.querySelector(
+        document.getElementById('leaveTable').style.display !== 'none'
+          ? '#leaveTable tbody'
+          : '#attendanceTable tbody'
+      );
+
+      if (lastDeletedIndex >= tableBody.rows.length) {
+        tableBody.appendChild(lastDeletedRow);
+      } else {
+        tableBody.insertBefore(lastDeletedRow, tableBody.rows[lastDeletedIndex]);
+      }
+    }
+    document.getElementById('undoBox').style.display = 'none';
+    clearTimeout(undoTimer);
+  }
+
+  function viewReason(reasonText) {
+    document.getElementById('reasonText').textContent = reasonText;
+    document.getElementById('reasonModal').style.display = 'block';
+  }
+
+  function closeModal() {
+    document.getElementById('reasonModal').style.display = 'none';
+  }
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('reasonModal');
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  };
+</script>
+
+</body>
+</html>
+
+
+-----wix code---
+
+
+import wixData from 'wix-data';
+import wixLocation from 'wix-location';
+import wixStorage from 'wix-storage';
+
+$w.onReady(function () {
+  const teacherData = wixStorage.session.getItem("teacherData");
+  const teacherObj = JSON.parse(teacherData);
+  const School = teacherObj.school;
+  const employeerole = teacherObj.role;
+
+  console.log("School:", School);
+  console.log("Employee Role:", employeerole);
+
+  const payload = {
+    schoolName: School,
+    empid: "",
+    empname: "",
+    leavetype: "",
+    leavecategory: "",
+    reason: "",
+    noofdays: "",
+    approverrole: "",
+  };
+
+  fetch("https://prod-20.centralindia.logic.azure.com:443/workflows/ad9efa5472ea45829c758070dabcc56a/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=YS5t5qbeLcqgiXBdJsAO_35HtMbu6lMfSvE8HwTKXwI", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(response => {
+    if (!response.ok) throw new Error("Network response was not ok");
+    return response.json();
+  })
+  .then(data => {
+    console.log("Fetched Data:", data);
+    // Ensure that data is in the expected format
+     {
+      $w('#html1').postMessage({
+        employeerole: employeerole,
+        action: "displayDetails",
+        records: data
+      });
+    } {
+      console.log("Data is not an array:", data);
+    }
+  })
+  .catch(error => {
+    console.error("Error:", error);
+  });
+});

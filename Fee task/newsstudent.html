@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        font-family: "Poppins", sans-serif;
+        background: #f5f8fb;
+      }
+       #uploadBtn {
+        background: linear-gradient(135deg, #3182ce, #63b3ed);
+        color: #fff;
+        border: none;
+        padding: 7px 16px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 6px 12px rgba(49, 130, 206, 0.3);
+        transition: all 0.3s ease;
+      }
+      #uploadBtn:hover {
+        background: linear-gradient(135deg, #2b6cb0, #4299e1);
+      }
+      .form-container {
+        width: 100%;
+        min-height: 100%;
+        padding: 40px;
+        box-sizing: border-box;
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        max-width: 1400px;
+        margin: 20px auto;
+        overflow-y: auto;
+      }
+      .form-container h2 {
+        text-align: center;
+        margin-bottom: 40px;
+        color: #1a202c;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .form-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      .form-group {
+        flex: 1 1 calc(33.333% - 20px);
+        min-width: 250px;
+        display: flex;
+        flex-direction: column;
+      }
+      .form-group label {
+        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #4a5568;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+        background: #f9fafb;
+        transition: all 0.3s ease;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        border-color: #3182ce;
+        background: #ffffff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+      }
+      .form-group input:disabled,
+      .form-group select:disabled {
+        background: #e2e8f0;
+        color: #718096;
+      }
+      .error-message {
+        color: #e53e3e;
+        font-size: 12px;
+        margin-top: 4px;
+        display: none;
+      }
+      .error-border {
+        border-color: #e53e3e !important;
+      }
+      .hybrid-input {
+        display: flex;
+        gap: 10px;
+      }
+      .hybrid-input select {
+        flex: 1;
+      }
+      .hybrid-input input {
+        flex: 2;
+      }
+     .submit-container {
+  text-align: center;
+  margin-top: 150px;
+   justify-content: center; /* Horizontal centering */
+  align-items: center;     /* Vertical centering */
+  height: 100vh;      
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #3182ce, #63b3ed);
+  color: #fff;
+  border: none;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(49, 130, 206, 0.3);
+  transition: all 0.3s ease;
+   text-align: center;
+   justify-content: center; 
+}
+
+      .submit-button:hover {
+        background: linear-gradient(135deg, #2b6cb0, #4299e1);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(49, 130, 206, 0.4);
+      }
+      .submit-button:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      #statusMessage {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        display: none;
+      }
+      .success-message {
+        background-color: #e6ffed;
+        color: #237a36;
+        border: 1px solid #b7eb8f;
+      }
+      .error-message-container {
+        background-color: #fff1f0;
+        color: #a8071a;
+        border: 1px solid #ffa39e;
+      }
+      @media (max-width: 1000px) {
+        .form-group {
+          flex: 1 1 calc(50% - 20px);
+        }
+      }
+      @media (max-width: 600px) {
+        .form-group {
+          flex: 1 1 100%;
+        }
+        .hybrid-input {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-container" id="studentForm">
+      <h2>Student Form</h2>
+      <div class="form-grid">
+        <!-- All form fields -->
+        <div class="form-group">
+          <label>School Name</label>
+          <input id="schoolName" disabled />
+          <div class="error-message" id="schoolName-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Student Name *</label>
+          <input id="studentName" required />
+          <div class="error-message" id="studentName-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input id="address" />
+          <div class="error-message" id="address-error"></div>
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input id="city" />
+          <div class="error-message" id="city-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Father Name</label>
+          <input id="fatherName" />
+          <div class="error-message" id="fatherName-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Mother Name</label>
+          <input id="motherName" />
+          <div class="error-message" id="motherName-error"></div>
+        </div>
+         <div class="form-group">
+          <label>Sibling Name</label><input id="siblingName" />
+        </div>
+        <div class="form-group">
+          <label>Sibling ID</label><input id="motherName" />
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="gender">
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Transgender">Transgender</option>
+          </select>
+          <div class="error-message" id="gender-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input id="dob" type="date" / required>
+          <div class="error-message" id="dob-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Mobile No</label>
+          <input id="mobile" type="number" min="0" />
+          <div class="error-message" id="mobile-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Academic Year *</label>
+          <select id="academicyear" required>
+            <option value="">Select Academic Year</option>
+          </select>
+          <div class="error-message" id="academicyear-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Secondary Contact</label>
+          <input id="secondaryContact" type="number" min="0" />
+          <div class="error-message" id="secondaryContact-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input id="email" type="email" />
+          <div class="error-message" id="email-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Date Joining *</label>
+          <input id="dateJoining" type="date" required />
+          <div class="error-message" id="dateJoining-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Admission No</label>
+          <input id="admissionNo" />
+          <div class="error-message" id="admissionNo-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Bus No</label>
+          <input id="busNo" />
+          <div class="error-message" id="busNo-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Bus Stop</label>
+          <input id="busStop" />
+          <div class="error-message" id="busStop-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Class *</label>
+          <select id="classSelect" >
+           <option value="">Select type</option>
+    <option value="1">1</option> <!-- Use 'divide' as value -->
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+    <option value="10">10</option>
+    
+          </select>
+          <div class="error-message" id="classSelect-error"></div>
+        </div>
+        <!-- Add these new dropdowns in your HTML form -->
+        <div class="form-group">
+          <label>Board Type</label>
+          <select id="boardType">
+            <option value="">Select Board Type</option>
+          </select>
+          <div class="error-message" id="boardType-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Residentiality</label>
+          <select id="residentiality">
+            <option value="">Select Residentiality</option>
+            <option value="">DAYS SCHOLAR</option>
+            <option value="">SEMI-RESIDENTIAL</option>
+            <option value="">RESIDENTIAL</option>
+
+          </select>
+          <div class="error-message" id="residentiality-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Section *</label>
+          <div class="hybrid-input">
+            <select id="sectionDropdown" disabled>
+              <option value="">Select</option>
+            </select>
+            <input id="sectionInput" placeholder="Or enter custom" disabled />
+          </div>
+          <div class="error-message" id="section-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Aadhar Card No</label>
+          <input id="aadhar" />
+          <div class="error-message" id="aadhar-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Apaar Card</label>
+          <input id="apaar" />
+          <div class="error-message" id="apaar-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Pen No</label>
+          <input id="penNo" />
+          <div class="error-message" id="penNo-error"></div>
+        </div>
+        <!-- Fee fields -->
+        <div class="form-group">
+          <label>Registration Fee</label>
+          <input id="registrationFee" type="number" min="0" />
+          <div class="error-message" id="registrationFee-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Admission Fee</label>
+          <input id="admissionFee" type="number" min="0" />
+          <div class="error-message" id="admissionFee-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Annual Fee</label>
+          <input id="annualFee" type="number" min="0" />
+          <div class="error-message" id="annualFee-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Tuition Fee Term1</label>
+          <input id="tuition1" type="number" min="0" />
+          <div class="error-message" id="tuition1-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Tuition Fee Term2</label>
+          <input id="tuition2" type="number" min="0" />
+          <div class="error-message" id="tuition2-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Tuition Fee Term3</label>
+          <input id="tuition3" type="number" min="0" />
+          <div class="error-message" id="tuition3-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Bus Fee Term1</label>
+          <input id="busFee1" type="number" min="0" />
+          <div class="error-message" id="busFee1-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Bus Fee Term2</label>
+          <input id="busFee2" type="number" min="0" />
+          <div class="error-message" id="busFee2-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Bus Fee Term3</label>
+          <input id="busFee3" type="number" min="0" />
+          <div class="error-message" id="busFee3-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Caution Deposit</label>
+          <input id="cautionDeposit" type="number" min="0" />
+          <div class="error-message" id="cautionDeposit-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Food Fee</label>
+          <input id="foodFee" type="number" min="0" />
+          <div class="error-message" id="foodFee-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Miscellaneous Fee</label>
+          <input id="miscFee" type="number" min="0" />
+          <div class="error-message" id="miscFee-error"></div>
+        </div>
+        <div class="form-group">
+          <label>Total Fee</label>
+          <input id="totalFee" type="number" min="0" readonly />
+        </div>
+        <div class="form-group">
+    <div>
+      <label for="docType"><i class="form-group"></i>Document Type:</label>
+      <select id="docType">
+        <option value="">Select Type</option>
+        <option value="link">Link</option>
+        <option value="document">Upload Document</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Link input (if shown) -->
+  <div id="linkInputContainer" class="form-group" style="display: none;">
+    <div>
+      <label for="linkInput">Paste Link:</label>
+      <input type="url" id="linkInput">
+    </div>
+  </div>
+
+  <!-- File upload (if shown) -->
+<div id="fileUploadContainer" class="form-group" style="display: none; width: 300px;">
+    <div>
+<input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg" />
+
+      <p>Allowed formats: PDF, DOC, DOCX, TXT, PPT, PPTX, XLS, XLSX JPG JPEG(Max 5MB)</p>
+      <button id="uploadBtn" >Upload</button>
+      <div id="uploadStatus" style="display: none;"></div>
+    </div>
+  </div>
+
+       
+
+      <div class="submit-container">
+        <button id="submitButton" class="submit-button">Submit</button>
+      </div>
+      <div id="statusMessage"></div>
+    </div>
+
+    <script>
+      // Global variables
+      let SCHOOL, CLASSES, SECTIONS_MAP;
+      let FEE_STRUCTURE_DATA = [];
+      let UNIQUE_BOARD_TYPES = [];
+      let UNIQUE_RESIDENTIAL_TYPES = [];
+
+      // Initialize form
+      document.addEventListener("DOMContentLoaded", function () {
+        // Fill academic year dropdown
+        const academicYearSelect = document.getElementById("academicyear");
+        const startYear = new Date().getFullYear();
+        const numberOfYears = 10;
+
+        for (let i = 0; i < numberOfYears; i++) {
+          const year1 = startYear + i;
+          const year2 = year1 + 1;
+          const option = document.createElement("option");
+          option.value = `${year1}-${year2 - 2000}`;
+          option.textContent = `${year1}-${year2 - 2000}`;
+          academicYearSelect.appendChild(option);
+        }
+
+        // Set current academic year as default
+        const currentYear = new Date().getFullYear();
+        const nextYear = currentYear + 1;
+        const currentAcademicYear = `${currentYear}-${nextYear - 2000}`;
+        academicYearSelect.value = currentAcademicYear;
+
+        // Set today's date as default for dateJoining
+        document.getElementById("dateJoining").valueAsDate = new Date();
+
+        // Initialize event listeners
+        initEventListeners();
+      });
+
+      // Initialize all event listeners
+      function initEventListeners() {
+        // Section dropdown/input interaction
+        document
+          .getElementById("sectionDropdown")
+          .addEventListener("change", (e) => {
+            if (e.target.value) {
+              document.getElementById("sectionInput").value = "";
+              clearError("section-error");
+            }
+          });
+
+        document
+          .getElementById("classSelect")
+          .addEventListener("change", updateFeeFields);
+        document
+          .getElementById("boardType")
+          .addEventListener("change", updateFeeFields);
+        document
+          .getElementById("residentiality")
+          .addEventListener("change", updateFeeFields);
+
+        document
+          .getElementById("sectionInput")
+          .addEventListener("input", (e) => {
+            if (e.target.value) {
+              document.getElementById("sectionDropdown").value = "";
+              clearError("section-error");
+            }
+          });
+
+        // Message listener for school data
+        window.addEventListener("message", handleMessage);
+
+        // Class select change handler
+        document
+          .getElementById("classSelect")
+          .addEventListener("change", function () {
+            const cls = this.value;
+            const dd = document.getElementById("sectionDropdown");
+            const ip = document.getElementById("sectionInput");
+
+            clearError("classSelect-error");
+
+            if (!cls) {
+              dd.disabled = ip.disabled = true;
+              dd.innerHTML = '<option value="">Select</option>';
+              return;
+            }
+
+            dd.disabled = ip.disabled = false;
+            const opts = SECTIONS_MAP[cls] || [];
+            dd.innerHTML =
+              '<option value="">Select</option>' +
+              opts.map((s) => `<option value="${s}">${s}</option>`).join("");
+
+            // Request fee data for this class
+            parent.postMessage(
+              {
+                type: "getFeeData",
+                payload: { school: SCHOOL, class: cls },
+              },
+              "*"
+            );
+          });
+
+        // Fee calculation
+        setupFeeCalculation();
+
+        // Form submission
+        document
+          .getElementById("submitButton")
+          .addEventListener("click", handleSubmit);
+      }
+
+      // Handle incoming messages
+      function handleMessage(evt) {
+        const d = evt.data || {};
+        console.log("Received message:", d);
+        //console.log("static_URL:",evt.data.fileUrl);
+        // School initialization
+        if (d.school && d.classes && d.sectionsMap) {
+          SCHOOL = d.school;
+          CLASSES = d.classes;
+          SECTIONS_MAP = d.sectionsMap;
+
+          document.getElementById("schoolName").value = SCHOOL;
+
+          const classSelect = document.getElementById("classSelect");
+          classSelect.innerHTML =
+            '<option value="">Select Class</option>' +
+            CLASSES.map((c) => `<option value="${c}">${c}</option>`).join("");
+          classSelect.disabled = false;
+
+          document.getElementById("sectionDropdown").disabled = true;
+          document.getElementById("sectionInput").disabled = true;
+        }
+
+        if (d.type === "feeData") {
+          FEE_STRUCTURE_DATA = d.records || [];
+
+          // Extract unique board types and residential types
+          UNIQUE_BOARD_TYPES = [
+            ...new Set(FEE_STRUCTURE_DATA.map((item) => item.crfec_boardtype)),
+          ];
+          UNIQUE_RESIDENTIAL_TYPES = [
+            ...new Set(FEE_STRUCTURE_DATA.map((item) => item.crfec_type)),
+          ];
+
+          // Populate board type dropdown
+          const boardTypeSelect = document.getElementById("boardType");
+          boardTypeSelect.innerHTML =
+            '<option value="">Select Board Type</option>' +
+            UNIQUE_BOARD_TYPES.map(
+              (type) => `<option value="${type}">${type}</option>`
+            ).join("");
+
+          // Populate residentiality dropdown
+          const residentialitySelect =
+            document.getElementById("residentiality");
+          residentialitySelect.innerHTML =
+            '<option value="">Select Residentiality</option>' +
+            UNIQUE_RESIDENTIAL_TYPES.map(
+              (type) => `<option value="${type}">${type}</option>`
+            ).join("");
+        }
+
+        // Fee data handling
+        if (d.type === "feeData") {
+          const fees = d.payload;
+          document.getElementById("registrationFee").value =
+            fees.registrationFee || 0;
+          document.getElementById("admissionFee").value =
+            fees.admissionFee || 0;
+          document.getElementById("annualFee").value = fees.annualFee || 0;
+          document.getElementById("tuition1").value = fees.tuition1 || 0;
+          document.getElementById("tuition2").value = fees.tuition2 || 0;
+          document.getElementById("tuition3").value = fees.tuition3 || 0;
+          document.getElementById("cautionDeposit").value =
+            fees.cautionDeposit || 0;
+          document.getElementById("totalFee").value = fees.totalFee || 0;
+
+          calculateTotalFee();
+        }
+
+        // Submission status handling
+        if (d.type === "submitStatus") {
+          const statusElement = document.getElementById("statusMessage");
+          const button = document.getElementById("submitButton");
+
+          if (statusElement) {
+            statusElement.style.display = "block";
+            statusElement.textContent = d.message;
+
+            if (d.status === "success") {
+              statusElement.className = "success-message";
+              resetForm();
+            } else {
+              statusElement.className = "error-message-container";
+            }
+
+            setTimeout(() => {
+              statusElement.style.display = "none";
+            }, 5000);
+          }
+
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Submit";
+          }
+        }
+      }
+
+      function updateFeeFields() {
+        const selectedClass = getValue("classSelect");
+        if (!selectedClass) return; // Class is still required
+
+        const selectedBoardType = getValue("boardType");
+        const selectedResidentiality = getValue("residentiality");
+
+        // Find matching fee structure (boardType and residentiality are optional)
+        const matchingFee = FEE_STRUCTURE_DATA.find(
+          (item) =>
+            item.crfec_class === selectedClass &&
+            (selectedBoardType === "" ||
+              item.crfec_boardtype === selectedBoardType) &&
+            (selectedResidentiality === "" ||
+              item.crfec_type === selectedResidentiality)
+        );
+
+        if (matchingFee) {
+          document.getElementById("registrationFee").value =
+            matchingFee.crfec_registrationfee || 0;
+          document.getElementById("admissionFee").value =
+            matchingFee.crfec_admissionfee || 0;
+          document.getElementById("annualFee").value =
+            matchingFee.crfec_annualfee || 0;
+          document.getElementById("tuition1").value =
+            matchingFee.crfec_tuitionfeeterm1 || 0;
+          document.getElementById("tuition2").value =
+            matchingFee.crfec_tutionfeeterm2 || 0;
+          document.getElementById("tuition3").value =
+            matchingFee.crfec_tutionfeeterm3 || 0;
+          document.getElementById("cautionDeposit").value =
+            matchingFee.crfec_cautiondeposit || 0;
+          document.getElementById("totalFee").value =
+            matchingFee.crfec_totaltuitionfee || 0;
+        } else {
+          // If no exact match found with optional fields, try to find a default
+          const defaultFee = FEE_STRUCTURE_DATA.find(
+            (item) => item.crfec_class === selectedClass
+          );
+
+          if (defaultFee) {
+            document.getElementById("registrationFee").value =
+              defaultFee.crfec_registrationfee || 0;
+            document.getElementById("admissionFee").value =
+              defaultFee.crfec_admissionfee || 0;
+            document.getElementById("annualFee").value =
+              defaultFee.crfec_annualfee || 0;
+            document.getElementById("tuition1").value =
+              defaultFee.crfec_tuitionfeeterm1 || 0;
+            document.getElementById("tuition2").value =
+              defaultFee.crfec_tutionfeeterm2 || 0;
+            document.getElementById("tuition3").value =
+              defaultFee.crfec_tutionfeeterm3 || 0;
+            document.getElementById("cautionDeposit").value =
+              defaultFee.crfec_cautiondeposit || 0;
+            document.getElementById("totalFee").value =
+              defaultFee.crfec_totaltuitionfee || 0;
+          } else {
+            // Clear fee fields if no matching structure found at all
+            document.getElementById("registrationFee").value = 0;
+            document.getElementById("admissionFee").value = 0;
+            document.getElementById("annualFee").value = 0;
+            document.getElementById("tuition1").value = 0;
+            document.getElementById("tuition2").value = 0;
+            document.getElementById("tuition3").value = 0;
+            document.getElementById("cautionDeposit").value = 0;
+            document.getElementById("totalFee").value = 0;
+          }
+        }
+
+        calculateTotalFee();
+      }
+
+      // Setup fee calculation listeners
+      function setupFeeCalculation() {
+        const feeFields = [
+          "registrationFee",
+          "admissionFee",
+          "annualFee",
+          "tuition1",
+          "tuition2",
+          "tuition3",
+          "busFee1",
+          "busFee2",
+          "busFee3",
+          "cautionDeposit",
+          "foodFee",
+          "miscFee",
+          "discount",
+        ];
+
+        feeFields.forEach((id) => {
+          const field = document.getElementById(id);
+          if (field) {
+            field.addEventListener("input", calculateTotalFee);
+            field.addEventListener("change", calculateTotalFee);
+          }
+        });
+
+        calculateTotalFee();
+      }
+
+      // Calculate total fee
+      function calculateTotalFee() {
+        const getNumberValue = (id) => {
+          const val = document.getElementById(id).value;
+          return val ? parseFloat(val) : 0;
+        };
+
+        const sum =
+          getNumberValue("registrationFee") +
+          getNumberValue("admissionFee") +
+          getNumberValue("annualFee") +
+          getNumberValue("tuition1") +
+          getNumberValue("tuition2") +
+          getNumberValue("tuition3") +
+          getNumberValue("busFee1") +
+          getNumberValue("busFee2") +
+          getNumberValue("busFee3") +
+          getNumberValue("cautionDeposit") +
+          getNumberValue("foodFee") +
+          getNumberValue("miscFee");
+
+        const discount = getNumberValue("discount");
+        const totalAfterDiscount = sum - discount;
+
+        document.getElementById("totalFee").value = Math.max(
+          0,
+          totalAfterDiscount
+        ).toFixed(2);
+      }
+
+    window.addEventListener("message", (event) => {
+    const msg = event.data;
+    if (msg.type === "imageUrl") {
+      const imageUrl = msg.staticUrl;
+      console.log("Received Static Image URL:", imageUrl);
+
+      // Example: Set image preview
+      const img = document.getElementById("previewImg");
+      if (img && imageUrl) {
+        img.src = imageUrl;
+        img.style.display = "block";
+      }
+    }
+  });
+
+
+      // Handle form submission
+      async function handleSubmit() {
+        try {
+          // Validate form
+          if (!validateForm()) {
+            return;
+          }
+
+          const button = document.getElementById("submitButton");
+          button.disabled = true;
+          button.textContent = "Submitting...";
+
+          document.getElementById("statusMessage").style.display = "none";
+
+          // Prepare payload
+         const payload = {
+      type: "Insert",
+      studentName: getValue("studentName") || "",
+      address: getValue("address") || "",
+      city: getValue("city") || "",
+      fatherName: getValue("fatherName") || "",
+      motherName: getValue("motherName") || "",
+      gender: getValue("gender") || "",
+      dob: formatDate(getValue("dob")) || "",
+      mobile: getValue("mobile") || "",
+      academicyear: getValue("academicyear") || "",
+      secondaryContact: getValue("secondaryContact") || "",
+      email: getValue("email") || "",
+      dateJoining: formatDate(getValue("dateJoining")) || "",
+      admissionNo: getValue("admissionNo") || "",
+      boardType: getValue("boardType") || "",
+      residentiality: getValue("residentiality") || "",
+      busNo: getValue("busNo") || "",
+      busStop: getValue("busStop") || "",
+      class: getValue("classSelect") || "",
+      section: getValue("sectionDropdown") || getValue("sectionInput") || "",
+      aadhar: getValue("aadhar") || "",
+      apaar: getValue("apaar") || "",
+      penNo: getValue("penNo") || "",
+      registrationFee: parseFloat(getValue("registrationFee")) || 0,
+      admissionFee: parseFloat(getValue("admissionFee")) || 0,
+      annualFee: parseFloat(getValue("annualFee")) || 0,
+      tuition1: parseFloat(getValue("tuition1")) || 0,
+      tuition2: parseFloat(getValue("tuition2")) || 0,
+      tuition3: parseFloat(getValue("tuition3")) || 0,
+      busFee1: parseFloat(getValue("busFee1")) || 0,
+      busFee2: parseFloat(getValue("busFee2")) || 0,
+      busFee3: parseFloat(getValue("busFee3")) || 0,
+      cautionDeposit: parseFloat(getValue("cautionDeposit")) || 0,
+      foodFee: parseFloat(getValue("foodFee")) || 0,
+      miscFee: parseFloat(getValue("miscFee")) || 0,
+      totalFee: parseFloat(getValue("totalFee")) || 0,
+      schoolName: getValue("schoolName") || "",
+      imageUrl: imageUrl || "" // Ensure imageUrl exists
+    };
+
+          console.log("Form payload:", payload);
+
+          // Send to parent
+          parent.postMessage({ type: "submit", payload: payload }, "*");
+        } catch (error) {
+          console.error("Submission error:", error);
+          showStatusMessage("An error occurred during submission", "error");
+
+          const button = document.getElementById("submitButton");
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Submit";
+          }
+        }
+      }
+
+      // Validate form
+      function validateForm() {
+        let isValid = true;
+
+        // Required fields
+        const requiredFields = [
+          { id: "studentName", message: "Student name is required" },
+          { id: "academicyear", message: "Academic year is required" },
+          { id: "dateJoining", message: "Date of joining is required" },
+          { id: "classSelect", message: "Class is required" },
+        ];
+
+        requiredFields.forEach((field) => {
+          if (!getValue(field.id)) {
+            showError(field.id + "-error", field.message);
+            isValid = false;
+          } else {
+            clearError(field.id + "-error");
+          }
+        });
+
+        // Validate section (either dropdown or input must be filled)
+        if (!getValue("sectionDropdown") && !getValue("sectionInput")) {
+          showError("section-error", "Section is required");
+          isValid = false;
+        } else {
+          clearError("section-error");
+        }
+
+        // Validate email format if provided
+        const email = getValue("email");
+        if (email && !validateEmail(email)) {
+          showError("email-error", "Please enter a valid email address");
+          isValid = false;
+        } else {
+          clearError("email-error");
+        }
+
+        // Validate mobile number
+        const mobile = getValue("mobile");
+        if (mobile && mobile.length < 10) {
+          showError("mobile-error", "Mobile number must be at least 10 digits");
+          isValid = false;
+        } else {
+          clearError("mobile-error");
+        }
+
+        return isValid;
+      }
+
+      // Helper functions
+      function getValue(id) {
+        const element = document.getElementById(id);
+        return element ? element.value.trim() : "";
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return date.toISOString().split("T")[0];
+      }
+
+      function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
+
+      function showError(elementId, message) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.textContent = message;
+          element.style.display = "block";
+          const input = document.getElementById(
+            elementId.replace("-error", "")
+          );
+          if (input) input.classList.add("error-border");
+        }
+      }
+
+      function clearError(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.textContent = "";
+          element.style.display = "none";
+          const input = document.getElementById(
+            elementId.replace("-error", "")
+          );
+          if (input) input.classList.remove("error-border");
+        }
+      }
+
+      function showStatusMessage(message, type) {
+        const element = document.getElementById("statusMessage");
+        if (element) {
+          element.textContent = message;
+          element.className =
+            type === "success" ? "success-message" : "error-message-container";
+          element.style.display = "block";
+
+          setTimeout(() => {
+            element.style.display = "none";
+          }, 5000);
+        }
+      }
+
+      // Reset form
+      function resetForm() {
+        // Clear all inputs except school name
+        document
+          .querySelectorAll("#studentForm input:not(#schoolName)")
+          .forEach((input) => {
+            if (input.type !== "button" && input.type !== "submit") {
+              input.value = "";
+            }
+          });
+
+        // Reset select dropdowns
+        document.querySelectorAll("#studentForm select").forEach((select) => {
+          if (select.id !== "schoolName") {
+            select.selectedIndex = 0;
+          }
+        });
+
+        // Reset section controls
+        document.getElementById("sectionDropdown").innerHTML =
+          '<option value="">Select</option>';
+        document.getElementById("sectionInput").value = "";
+
+        // Reset total fee
+        document.getElementById("totalFee").value = "0";
+
+        // Reset class select
+        document.getElementById("classSelect").disabled = false;
+
+        // Reset section controls
+        document.getElementById("sectionDropdown").disabled = true;
+        document.getElementById("sectionInput").disabled = true;
+
+        // Set default academic year
+        const currentYear = new Date().getFullYear();
+        const nextYear = currentYear + 1;
+        const currentAcademicYear = `${currentYear}-${nextYear - 2000}`;
+        document.getElementById("academicyear").value = currentAcademicYear;
+
+        // Set today's date as default for dateJoining
+        document.getElementById("dateJoining").valueAsDate = new Date();
+
+        // Clear all error messages
+        document.querySelectorAll(".error-message").forEach((el) => {
+          el.textContent = "";
+          el.style.display = "none";
+        });
+
+        // Clear error borders
+        document.querySelectorAll(".error-border").forEach((el) => {
+          el.classList.remove("error-border");
+        });
+      }
+
+
+
+ 
+
+   document.addEventListener('DOMContentLoaded', function () {
+    const discountInput = document.getElementById("discount");
+    const discountType = document.getElementById("discounttype");
+    const totalFeeField = document.getElementById("totalFee");
+    const divideSection = document.getElementById("divideSection");
+    const divideAmountInput = document.getElementById("divideAmount");
+
+    const feeFields = [
+      "registrationFee", "admissionFee", "annualFee",
+      "tuition1", "tuition2", "tuition3",
+      "busFee1", "busFee2", "busFee3",
+      "cautionDeposit", "foodFee", "miscFee"
+    ];
+
+    // Store original tuition values for divide
+    let originalTuitionValues = {
+      tuition1: 0,
+      tuition2: 0,
+      tuition3: 0
+    };
+
+    // Listen to inputs to store original values
+    feeFields.forEach(id => {
+      const field = document.getElementById(id);
+      field.addEventListener("input", () => {
+        field.setAttribute("data-original", field.value);
+        calculateTotalFee();
+      });
+    });
+
+    // Show/hide divide input based on discount type
+    discountType.addEventListener("change", function () {
+      const selected = this.value;
+
+      if (selected === "divide") {
+        divideSection.style.display = "block";
+
+        // Save current tuition values for accurate divide
+        originalTuitionValues.tuition1 = parseFloat(document.getElementById("tuition1").value) || 0;
+        originalTuitionValues.tuition2 = parseFloat(document.getElementById("tuition2").value) || 0;
+        originalTuitionValues.tuition3 = parseFloat(document.getElementById("tuition3").value) || 0;
+      } else {
+        divideSection.style.display = "none";
+        applyDiscount(); // Apply regular discount
+      }
+    });
+
+    // Divide discount input listener
+    divideAmountInput.addEventListener("input", function () {
+      const totalAmount = parseFloat(this.value) || 0;
+      discountInput.value = totalAmount.toFixed(2); // Sync discount value
+
+      const divided = totalAmount / 3;
+      const t1 = Math.max(0, originalTuitionValues.tuition1 - divided);
+      const t2 = Math.max(0, originalTuitionValues.tuition2 - divided);
+      const t3 = Math.max(0, originalTuitionValues.tuition3 - divided);
+
+      document.getElementById("tuition1").value = t1.toFixed(2);
+      document.getElementById("tuition2").value = t2.toFixed(2);
+      document.getElementById("tuition3").value = t3.toFixed(2);
+
+      calculateTotalFee();
+    });
+
+    // Apply discount to selected fee field
+    function applyDiscount() {
+      const selectedType = discountType.value;
+      const discountAmount = parseFloat(discountInput.value) || 0;
+
+      if (selectedType && selectedType !== "divide") {
+        const field = document.getElementById(selectedType);
+        if (field) {
+          const original = parseFloat(field.getAttribute("data-original")) || parseFloat(field.value) || 0;
+          field.value = Math.max(0, original - discountAmount).toFixed(2);
+        }
+      }
+
+      calculateTotalFee();
+    }
+
+    // Total fee calculation from all fields (already discounted)
+    function calculateTotalFee() {
+      let total = 0;
+
+      feeFields.forEach(id => {
+        const val = parseFloat(document.getElementById(id).value) || 0;
+        total += val;
+      });
+
+      totalFeeField.value = total.toFixed(2);
+    }
+
+    // Attach input listener
+    discountInput.addEventListener("input", applyDiscount);
+
+    // Initial total
+    calculateTotalFee();
+  });
+</script>
+<script>
+
+  const ALLOWED_TYPES = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/jpeg',
+    'image/jpg'
+  ];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 30MB
+
+  document.getElementById('docType').addEventListener('change', function() {
+    const type = this.value;
+    document.getElementById('linkInputContainer').style.display = type === 'link' ? 'block' : 'none';
+    document.getElementById('fileUploadContainer').style.display = type === 'document' ? 'block' : 'none';
+    document.getElementById('uploadStatus').style.display = 'none';
+  });
+  
+  // Upload button handler
+  document.getElementById('uploadBtn').addEventListener('click', () => {
+    const input = document.getElementById('fileInput');
+    if (!input.files.length) return alert('Please select a file first');
+
+    const file = input.files[0];
+
+    // Validate file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return alert('Invalid file type. Please upload only document files (PDF, Word, Excel, PowerPoint, Text, JPG)');
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return alert('File size exceeds 5MB limit. Please choose a smaller file.');
+    }
+
+    document.getElementById('uploadBtn').disabled = true;
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    if (addToCartBtn) addToCartBtn.disabled = true;
+
+    document.getElementById('uploadStatus').textContent = 'Uploading...';
+    document.getElementById('uploadStatus').style.color = 'blue';
+    document.getElementById('uploadStatus').style.display = 'block';
+
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      // Get the full data URL
+      const dataUrl = event.target.result;
+      console.log("Full data URL:", dataUrl); // This will show the complete data URL
+      
+      // Extract the base64 part
+      const base64 = dataUrl.split(',')[1];
+      console.log("Base64 string:", base64 ? base64.substring(0, 50) + "..." : "No base64 data found");
+
+      if (!base64) {
+        console.error("Failed to extract base64 data from file");
+        document.getElementById('uploadStatus').textContent = 'Upload failed - invalid file data';
+        document.getElementById('uploadStatus').style.color = 'red';
+        return;
+      }
+
+      currentUpload = {
+        fileName: file.name,
+        fileType: file.type
+      };
+
+      window.parent.postMessage({
+        action: 'upload',
+        fileName: file.name,
+        fileBase64: base64,
+        fileType: file.type,
+      }, '*');
+
+      document.getElementById('uploadStatus').textContent = 'Upload complete!';
+      document.getElementById('uploadStatus').style.color = 'green';
+    };
+
+    reader.onerror = () => {
+      console.error("FileReader error occurred");
+      document.getElementById('uploadStatus').textContent = 'Upload failed';
+      document.getElementById('uploadStatus').style.color = 'red';
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+</script>
+<script>
+// Add this message listener to your existing HTML code
+window.addEventListener('message', function(event) {
+  // Verify the message is coming from your Wix site (optional but recommended)
+  // if (event.origin !== "https://yourwixsite.com") return;
+  
+  const data = event.data;
+  
+  // Handle upload success
+  if (data.status === 'success') {
+    console.log('Upload successful! File URL:', data.fileUrl);
+    // Do something with the file URL, like displaying it or storing it
+    document.getElementById('uploadStatus').textContent = 'Upload successful!';
+    document.getElementById('uploadStatus').style.color = 'green';
+    document.getElementById('fileUrlDisplay').href = data.fileUrl;
+    document.getElementById('fileUrlDisplay').textContent = 'View uploaded file';
+  }
+  
+  // Handle upload error
+  else if (data.status === 'error') {
+    console.error('Upload failed:', data.error);
+    document.getElementById('uploadStatus').textContent = 'Error: ' + data.error;
+    document.getElementById('uploadStatus').style.color = 'red';
+  }
+  
+  // You can add more message types as needed
+});
+</script>
+<script>
+  
+</script>
+  </body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leave Application</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Playfair Display', serif;
+      background-color: #f5f5f5;
+      padding: 30px;
+    }
+    .form-container {
+      background-color: white;
+      padding: 30px 40px;
+      border-radius: 8px;
+      max-width: 680px;
+      margin: auto;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      background-color: #0d4484;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #0a509f;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-family: 'Playfair Display', serif;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #0056b3;
+      outline: none;
+      box-shadow: 0 0 4px #0056b3;
+    }
+    .leave-type-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    .leave-type-option {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      border: 2px solid transparent;
+      margin-right: 10px;
+      transition: background-color 0.3s;
+    }
+    .leave-type-option:last-child {
+      margin-right: 0;
+    }
+    .leave-type-option:hover {
+      background-color: #cdd8e0;
+    }
+    .leave-type-option.active {
+      background-color: #0d4484;
+      color: white;
+      border-color: #0a509f;
+    }
+    .hidden {
+      display: none;
+    }
+    button.submit-btn {
+      display: block;
+      margin: 25px auto 0 auto;
+      background-color: #0d4484;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background-color 0.3s;
+    }
+    button.submit-btn:hover {
+      background-color: #093569;
+    }
+    @media (min-width: 768px) {
+      .form-container {
+        max-width: 700px;
+        padding: 40px;
+      }
+      textarea {
+        height: 100px;
+      }
+      button.submit-btn {
+        font-size: 16px;
+        padding: 12px 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-container">
+  <h2>Leave Application Form</h2>
+
+  <div class="leave-type-row">
+    <div class="leave-type-option active" id="singleTab">Single Day</div>
+    <div class="leave-type-option" id="multiTab">Multiple Days</div>
+    <div class="leave-type-option" id="attendanceTab">Attendance Regulation</div>
+  </div>
+
+  <div id="singleSection">
+    <label for="singleDate">Date</label>
+    <input type="date" id="singleDate">
+  </div>
+
+  <div id="multipleSection" class="hidden">
+    <label for="multiFrom">Leave From</label>
+    <input type="date" id="multiFrom">
+    <label for="multiTo">Leave To</label>
+    <input type="date" id="multiTo">
+    <label for="multiDays">Number of Days</label>
+    <input type="number" id="multiDays" min="2" value="2">
+  </div>
+
+  <div id="attendanceSection" class="hidden">
+    <label for="attendanceDate">Date</label>
+    <input type="date" id="attendanceDate">
+    <label for="logType">Daily Log</label>
+    <select id="logType">
+      <option value="">Select</option>
+      <option>Check-in</option>
+      <option>Check-out</option>
+    </select>
+    <label for="logTime">Time</label>
+    <input type="time" id="logTime">
+  </div>
+
+  <div id="leaveCategorySection">
+    <label for="leaveType">Leave Category</label>
+    <select id="leaveType">
+      <option value="">Select</option>
+      <option value="Work Leave">Work Leave</option>
+      <option value="Personal Leave">Personal Leave</option>
+      <option value="Paid Leave">Paid Leave</option>
+    </select>
+  </div>
+
+  <div id="personalIssueContainer" class="hidden">
+    <label for="personalIssue">Personal Issue</label>
+    <select id="personalIssue">
+      <option value="">Select</option>
+      <option value="Health Issues">Health Issues</option>
+      <option value="Travel">Travel</option>
+      <option value="Function">Function</option>
+    </select>
+  </div>
+
+  <label for="reason">Reason</label>
+  <textarea id="reason" rows="3" placeholder="Enter your reason..."></textarea>
+
+  <button class="submit-btn"><i class="fas fa-paper-plane"></i> Apply</button>
+</div>
+
+<script>
+  let schoolName = "", employeename = "", employeerole = "", employeeid = "";
+
+  window.addEventListener("message", (event) => {
+    if (event.data) {
+      schoolName = event.data.schoolName || schoolName;
+      employeename = event.data.employeename || employeename;
+      employeerole = event.data.employeerole || employeerole;
+      employeeid = event.data.employeeid || employeeid;
+    }
+  });
+
+  const singleTab = document.getElementById('singleTab');
+  const multiTab = document.getElementById('multiTab');
+  const attendanceTab = document.getElementById('attendanceTab');
+  const singleSection = document.getElementById('singleSection');
+  const multipleSection = document.getElementById('multipleSection');
+  const attendanceSection = document.getElementById('attendanceSection');
+  const leaveType = document.getElementById('leaveType');
+  const leaveCategorySection = document.getElementById('leaveCategorySection');
+  const personalIssueContainer = document.getElementById('personalIssueContainer');
+  const submitBtn = document.querySelector('.submit-btn');
+
+  singleTab.addEventListener('click', () => {
+    switchTab("single");
+  });
+
+  multiTab.addEventListener('click', () => {
+    switchTab("multi");
+  });
+
+  attendanceTab.addEventListener('click', () => {
+    switchTab("attendance");
+  });
+
+  function switchTab(type) {
+    singleTab.classList.remove('active');
+    multiTab.classList.remove('active');
+    attendanceTab.classList.remove('active');
+    singleSection.classList.add('hidden');
+    multipleSection.classList.add('hidden');
+    attendanceSection.classList.add('hidden');
+    leaveCategorySection.classList.remove('hidden');
+
+    if (type === "single") {
+      singleTab.classList.add('active');
+      singleSection.classList.remove('hidden');
+    } else if (type === "multi") {
+      multiTab.classList.add('active');
+      multipleSection.classList.remove('hidden');
+    } else {
+      attendanceTab.classList.add('active');
+      attendanceSection.classList.remove('hidden');
+      leaveCategorySection.classList.add('hidden');
+    }
+  }
+
+  document.getElementById('multiFrom').addEventListener('change', calculateDays);
+  document.getElementById('multiTo').addEventListener('change', calculateDays);
+
+  function calculateDays() {
+    const from = new Date(document.getElementById('multiFrom').value);
+    const to = new Date(document.getElementById('multiTo').value);
+    if (from && to && from <= to) {
+      const diff = Math.floor((to - from) / (1000 * 3600 * 24)) + 1;
+      document.getElementById('multiDays').value = diff;
+    }
+  }
+
+  leaveType.addEventListener('change', () => {
+    if (leaveType.value === 'Personal Leave') {
+      personalIssueContainer.classList.remove('hidden');
+    } else {
+      personalIssueContainer.classList.add('hidden');
+      document.getElementById('personalIssue').value = "";
+    }
+  });
+
+  submitBtn.addEventListener('click', async () => {
+    let leaveTypeValue = "", dateFrom = "", dateTo = "", numberOfDays = "1", time = "";
+    const selectedTab = document.querySelector('.leave-type-option.active').id;
+
+    if (selectedTab === "singleTab") {
+      leaveTypeValue = "Single Day";
+      dateFrom = document.getElementById('singleDate').value;
+      dateTo = dateFrom;
+    } else if (selectedTab === "multiTab") {
+      leaveTypeValue = "Multiple Day";
+      dateFrom = document.getElementById('multiFrom').value;
+      dateTo = document.getElementById('multiTo').value;
+      numberOfDays = document.getElementById('multiDays').value;
+    } else if (selectedTab === "attendanceTab") {
+      const logType = document.getElementById('logType').value;
+      if (!logType) {
+        alert("Please select Check-in or Check-out.");
+        return;
+      }
+      leaveTypeValue = logType;
+      dateFrom = document.getElementById('attendanceDate').value;
+      dateTo = dateFrom;
+      time = document.getElementById('logTime').value;
+    }
+
+    const reason = document.getElementById('reason').value;
+    const leaveCategory = document.getElementById('leaveType').value;
+    const personalIssue = document.getElementById('personalIssue').value;
+    const actualCategory = selectedTab !== "attendanceTab" ? (leaveCategory === "Personal Leave" ? personalIssue : leaveCategory) : "";
+
+    if (!dateFrom || !reason || (selectedTab !== "attendanceTab" && !actualCategory)) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    let approverRole = "";
+    const lowerRole = employeerole.toLowerCase();
+    if (["coordinator", "finance team", "front desk", "warden", "teacher", "admin"].includes(lowerRole)) {
+      approverRole = "admin";
+    } else if (lowerRole === "principal") {
+      approverRole = "Management";
+    }
+
+    const payload = {
+      type :"Insert",
+      schoolName,
+      employeeId: employeeid,
+      leaveType: leaveTypeValue,
+      dateFrom,
+      dateTo,
+      numberOfDays,
+      leaveCategory: actualCategory,
+      reason,
+      time,
+      employeename,
+      employeerole,
+      approverRole
+    };
+
+    console.log("Payload:", payload);
+
+    try {
+      const res = await fetch("https://prod-16.centralindia.logic.azure.com:443/workflows/1ee5dc7fa2b847429161c0e0920bafd2/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=28NhaEGVyENrM1iOBYUw9mqqAI3MsR5J4HSWz9qkSBQ", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      alert(res.ok ? "Leave submitted successfully!" : "Failed to submit leave.");
+    } catch (err) {
+      console.error("Submission error:", err);
+      alert("Something went wrong.");
+    }
+  });
+</script>
+</body>
+</html>
+
+
+-------wix code------
+
+
+import { fetch } from 'wix-fetch';
+import wixStorage from 'wix-storage';
+import wixLocation from 'wix-location';
+import wixData from 'wix-data';
+
+$w.onReady(function () {
+    const teacherData = wixStorage.session.getItem("teacherData");
+  // ✅ Read all fields from session
+   const teacherObj = JSON.parse(teacherData);
+    //const TeacherLoginId = teacherObj.login;
+    const EMP_id = teacherObj.employeeid;
+    console.log("emp_id:",EMP_id);
+    
+    //const TeacherLoginId = teacherObj.login;
+    const School = teacherObj.school;
+	const employeerole = teacherObj.role;
+	const employeename = teacherObj.employeeName;
+    const empid = teacherObj.employeeid;
+    // (If needed you could also extract subject from teacherObj)
+    //console.log("emp_id:",empid);
+    console.log("School:", School);
+	console.log("Role:",employeerole);
+	console.log("Name:", employeename);
+
+   // const teacherData = JSON.parse(wixStorage.session.getItem("teacherData"));
+   // const School=teacherData.school
+    //console.log(teacherData)
+    
+    //const storedData = wixStorage.session.getItem("teacherData");
+
+   
+    $w('#html1').postMessage({schoolName: School})
+	$w('#html1').postMessage({employeename: employeename})
+	$w('#html1').postMessage({employeerole: employeerole})
+    $w('#html1').postMessage({employeeid: empid})
+	// to set school name default 
+
+   
+
+    })

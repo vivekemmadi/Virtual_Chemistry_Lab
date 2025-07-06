@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fee Payment Portal</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+      /* Add these styles to your existing style section */
+    .print-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    .print-content {
+      background: white;
+      width: 80%;
+      max-width: 800px;
+      padding: 20px;
+      border-radius: 8px;
+      
+      position: relative;
+    }
+    .print-actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .print-btn {
+      padding: 8px 16px;
+      background: #2a6f9e;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .close-btn {
+      padding: 8px 16px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+    padding:10px;
+  }
+  
+  html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  #printModal,
+  #printModal * {
+    visibility: visible;
+  }
+  
+  #printModal {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100vw !important;
+    height: auto;
+    background: white;
+    padding: 0 !important;
+    margin: 0 !important;
+
+  }
+    .print-content {
+    width: 100vw !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+  }
+
+  .receipt-container {
+    width: 100% !important;
+    break-inside: avoid;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+  }
+  
+  .print-actions {
+    display: none !important;
+  }
+       
+  
+
+ @media print {
+    .receipt-container {
+      page-break-inside: avoid;
+    }
+
+    .print-actions {
+      display: none !important;
+    }
+
+    body {
+      margin: 0;
+    }
+  } 
+        table {
+    border-collapse: collapse !important;
+    border: 1px solid #000 !important;
+    background: none !important;
+  }
+  
+  th, td {
+    border: 1px solid #000 !important;
+    background: none !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  thead th {
+    background: none !important;
+    color: #000 !important;
+    border-bottom: 2px solid #000 !important;
+  }
+  
+  tfoot td {
+    border-top: 2px solid #000 !important;
+  }
+  
+  /* Remove any box shadows or other decorations */
+  .stat-box, .fee-box, .card {
+    box-shadow: none !important;
+    background: none !important;
+    border: none !important;
+  }
+}
+
+    
+    body { margin:0; padding:1rem; font-family:'Segoe UI',sans-serif; background:#f0f2f5; }
+    h2,h3,h4 { margin:.5rem 0; }
+    .card { background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); padding:1rem; margin:1rem 0; }
+    .hidden { display:none; }
+
+    /* Loading Overlay */
+    #loadingOverlay {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.4); display:flex;align-items:center;justify-content:center;
+      z-index:9999; display:none;
+    }
+    #loadingOverlay .loader {
+      background:#fff; padding:1rem 2rem; border-radius:8px; font-size:1.2rem;
+      box-shadow:0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    /* Ack Banner */
+    #ack {
+      padding:.75rem 1rem; margin:1rem 0; border-radius:6px;
+      font-weight:600; visibility:hidden;
+    }
+    #ack.success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; visibility:visible; }
+    #ack.error   { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; visibility:visible; }
+
+    /* Search & Master Table */
+    #searchInput { width:100%; padding:.6rem; border:1px solid #bbb; border-radius:6px; margin-bottom:.5rem; }
+    table { width:100%; border-collapse:collapse; margin:.5rem 0; }
+    th,td { padding:.75rem; border-bottom:1px solid #eee; text-align:left; }
+    thead th { background:#2a6f9e; color:#fff; font-weight:600; }
+    tbody tr:hover { background:#e8f1fb; }
+    .btn-pay { background:#28a745; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
+    .add-discount-btn{ background:#28a745; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
+    /* Summary & Breakdown */
+    .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; }
+    .stat-box { background:#fff; border-radius:8px; padding:1rem; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+    .stat-box h3 { margin:0; font-size:1.5rem; } .stat-box p { margin:.25rem 0; color:#666; }
+    .breakdown-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; }
+    .fee-box { background:#fff; border-radius:6px; border:1px solid #ddd; padding:.75rem; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+    .fee-box h4 { margin:.25rem 0; font-size:1rem; } .fee-box small { color:#555; }
+
+    /* Form & Cart & Actions */
+    #formPanel label { display:block; margin-top:.5rem; font-size:.9rem; }
+    #formPanel input,#formPanel select,#formPanel textarea { width:100%; box-sizing:border-box; padding:.5rem; margin-top:.25rem; border:1px solid #ccc; border-radius:4px; }
+    .btn-add { background:#007bff; color:#fff; border:none; padding:.6rem 1.2rem; border-radius:4px; cursor:pointer; }
+
+    #cartTable,#txnTable { width:100%; border-collapse:collapse; margin-top:.75rem; }
+    #cartTable th,#cartTable td,#txnTable th,#txnTable td { padding:.5rem; border:1px solid #eee; }
+    #cartTable thead th,#txnTable thead th { background:#444; color:#fff; }
+    .btn-remove { background:#dc3545; color:#fff; border:none; padding:.3rem .6rem; border-radius:4px; cursor:pointer; }
+
+    .form-actions { display:flex; gap:1rem; margin:1rem 0; }
+    .form-actions button { flex:1; padding:.6rem; border:none; border-radius:4px; color:#fff; cursor:pointer; }
+    .btn-submit { background:#28a745; } .btn-whatsapp { background:#25d366; }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+  </style>
+</head>
+<body>
+  <!-- Loading & Ack -->
+  <div id="loadingOverlay"><div class="loader">Loading…</div></div>
+  <div id="ack"></div>
+
+  <!-- Master List Panel -->
+ <div id="masterPanel" class="card">
+    <h2>Fee Payment Portal</h2>
+    <input id="searchInput" placeholder="🔍 Search by ID, Student or Father's Name…" />
+    <table id="masterTable">
+      <thead>
+        <tr><th>ID</th><th>Student</th><th>Father</th><th>Class</th><th>Section</th><th>Action</th><th>Discount</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>  
+
+  <!-- Form + Details Panel -->
+  <div id="formPanel" class="card hidden">
+    <button onclick="location.reload()" style="background:none;border:none;color:#007bff;cursor:pointer;">
+      ← Back to Search
+    </button>
+
+      <!-- Student Info Display -->
+  <div id="studentInfo" style="margin: 1rem 0; padding: .75rem; background: #eef; border-radius: 6px;">
+    <strong>Student:</strong>
+    <span id="dispName">—</span> |
+    <strong>ID:</strong>
+    <span id="dispID">—</span> |
+    <strong>Class:</strong>
+    <span id="dispClass">—</span> |
+    <strong>Section:</strong>
+    <span id="dispSection">—</span>
+  </div>
+
+
+    <!-- Summary -->
+    <div class="summary-grid">
+      <div class="stat-box"><h3 id="boxTotal">₹0</h3><p>Total Fee</p></div>
+      <div class="stat-box"><h3 id="boxPaid">₹0</h3><p>Total Paid</p></div>
+      <div class="stat-box"><h3 id="boxDue">₹0</h3><p>Total Due</p></div>
+    </div>
+
+    <!-- Breakdown -->
+    <div class="breakdown-grid" id="breakdownGrid"></div>
+
+    <!-- New Payment Form -->
+    <div class="card" style="margin-top:1rem;">
+      <h3>New Payment</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div><label>Date</label><input type="date" id="payDate"></div>
+        <div><label>Towards</label>
+          <select id="towards">
+            <option>Admission Fee</option><option>Annual Fee</option><option>Registration Fee</option>
+            <option>Caution Deposit</option><option>Tution Fee Term-1</option><option>Tution Fee Term-2</option>
+            <option>Tution Fee Term-3</option><option>Transport Fee Term-1</option><option>Transport Fee Term-2</option>
+            <option>Transport Fee Term-3</option><option>Exam Fee</option><option>Miscellaneous Fee</option><option>IIT Fee</option><option>Stationary Fee</option>
+          </select>
+        </div>
+        <div><label>Academic Year</label><select id="academicYear"></select></div>
+        <div><label>Received By</label>
+          <select id="receivedBy">
+            <option>CASH</option><option>UPI</option><option>Bank Transfer</option><option>CHEQUE</option><option>CARD</option>
+          </select>
+        </div>
+        <div id="txnContainer" style="display:none;">
+          <label id="txnLabel">Txn ID / Cheque No</label>
+          <input id="txnOrCheque">
+        </div>
+        <div><label>Amount</label><input type="number" id="amount" placeholder="0.00"></div>
+        <div><label>Manual Receipt No:</label><input type="number" id="receiptt" placeholder="Enter Receipt Number"></div>
+      
+        <div style="grid-column:1/ -1;"><label>Narration</label><textarea id="narration" rows="2"></textarea></div>
+      </div>
+      
+      <button id="addToCart" class="btn-add">+ Add to Cart</button>
+    </div>
+
+    <!-- Cart -->
+    <div class="card" style="margin-top:1rem;">
+      <h3>Cart</h3>
+      <table id="cartTable">
+        <thead>
+          <tr><th>Date</th><th>Towards</th><th>Year</th><th>By</th><th>ID/Cheque</th><th>Amt</th><th>Note</th><th>×</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="form-actions">
+      <button id="submitPrint" class="btn-submit">Submit &amp; Print</button>
+      <button id="submitWhatsapp" class="btn-whatsapp">Send on WhatsApp</button>
+    </div>
+
+    <!-- Previous Transactions -->
+    <div class="card" style="margin-top:1rem;">
+      <h3>Previous Transactions</h3>
+      <table id="txnTable">
+        <thead>
+          <tr><th>Date</th><th>Amt</th><th>Mode</th><th>Type</th><th>Year</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+<div class="print-modal" id="printModal">
+    <div class="print-content" id="printContent">
+      <!-- Receipt content will be inserted here -->
+    </div>
+  </div>
+  <script>
+  (function(){
+    const { jsPDF } = window.jspdf;
+    let master=[], history=[], student=null, cart=[];
+    let feeStructure = {}; // To store fee structure for due calculations
+    let schoolLogo = null;
+    let schoolSubheading = '';
+    let schoolName="";
+    let hasPrinted = false;
+
+    const $=id=>document.getElementById(id);
+    const post=msg=>window.parent.postMessage(msg,'*');
+    const showEl=el=>el.classList.remove('hidden');
+    const hideEl=el=>el.classList.add('hidden');
+    const showLoading=()=> $(`loadingOverlay`).style.display='flex';
+    const hideLoading=()=> $(`loadingOverlay`).style.display='none';
+    const ack=(msg,type='success')=>{
+      const a=$('ack');
+      a.innerText=msg; a.className=type; a.style.visibility='visible';
+      setTimeout(()=>a.style.visibility='hidden',3000);
+    };
+
+
+    $('submitWhatsapp').disabled = true;
+    // Add this near the top of your script section
+function setupIframePrint() {
+  if (window.parent !== window) {
+    // We're in an iframe
+    window.addEventListener('beforeprint', (e) => {
+      document.body.style.webkitPrintColorAdjust = 'exact';
+    });
+    
+    window.addEventListener('afterprint', (e) => {
+      document.body.style.webkitPrintColorAdjust = '';
+    });
+  }
+}
+
+
+
+     function calculateDueAmount(feeType, amountPaid = 0) {
+      if (!feeStructure || !feeType) return 0;
+      const totalFee = feeStructure[feeType] || 0;
+      const alreadyPaid = history
+        .filter(t => t.cr726_emino === feeType)
+        .reduce((sum, t) => sum + Number(t.cr726_feespaid || 0), 0);
+      return Math.max(0, totalFee - alreadyPaid - amountPaid);
+    }
+
+    function makePdf(twoCopies = true) {
+      const doc = new jsPDF();
+      const margin = 10;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const centerX = pageWidth / 2;
+      
+      // Function to draw a single receipt
+      const drawReceipt = (startY, isCopy = false) => {
+        // School header with logo and name
+            let currentY = startY;
+            
+            if (schoolLogo) {
+            try {
+                // Add logo on left (reduced size for better alignment)
+                doc.addImage(schoolLogo, 'JPEG', margin, currentY, 25, 25);
+                
+                // School name next to logo
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text(schoolName, centerX, currentY + 10,{ align: 'center' });
+                
+                // Subheading below school name
+                if (schoolSubheading) {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(schoolSubheading, centerX, currentY + 16,{ align: 'center' });
+                }
+                
+                currentY += 30; // Adjust position after header
+            } catch (e) {
+                console.error("Error adding logo:", e);
+                // Fallback if logo fails
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text(schoolName, centerX, currentY + 10, { align: 'center' });
+                currentY += 20;
+            }
+            } else {
+            // No logo version
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text(schoolName, centerX, currentY + 10, { align: 'center' });
+            currentY += 20;
+            }
+            
+            // Horizontal line
+            doc.setDrawColor(150);
+            doc.line(margin, currentY + 5, pageWidth - margin, currentY + 5);
+            
+            // Fee Receipt title
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text("FEE RECEIPT", centerX, currentY + 12, { align: 'center' });
+            
+            // Student details
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            const receiptNumber = document.getElementById('receipt').value;
+            const detailsLeft = [
+            `Student ID: ${student.crfec_studentid || ''}`,
+            `Student Name: ${student.crfec_studentname || ''}`,
+            `Father Name: ${student.crfec_fathername || ''}`,
+            `Receipt Number: ${receiptNumber || 'N/A'}`
+            ];
+            
+            const detailsRight = [
+            `Date: ${new Date().toLocaleDateString()}`,
+            `Class: ${student.crfec_class || ''}`,
+            `Section: ${student.crfec_section || ''}`,
+            ];
+            
+            // Draw details in two columns
+            let y = currentY + 20;
+            for (let i = 0; i < detailsLeft.length; i++) {
+            doc.text(detailsLeft[i], margin, y);
+            doc.text(detailsRight[i], pageWidth - margin, y, { align: 'right' });
+            y += 6;
+            }
+            
+            // Horizontal line
+            doc.line(margin, y + 5, pageWidth - margin, y + 5);
+            
+            // Payment table header - Modified to include transaction/cheque details
+            y += 10;
+            doc.setFont('helvetica', 'bold');
+            doc.text("Towards", margin, y);
+            doc.text("Mode/Ref", centerX - 40, y); // Changed from "Payment Mode" to "Mode/Ref"
+            doc.text("Amount", centerX + 20, y);
+            doc.text("Due", pageWidth - margin, y, { align: 'right' });
+            
+            // Payment details - Modified to include transaction/cheque details
+            y += 7;
+            doc.setFont('helvetica', 'normal');
+            cart.forEach(item => {
+            const dueAmount = calculateDueAmount(item.towards, parseFloat(item.amount));
+            
+            // First line: Payment description
+            doc.text(item.towards, margin, y);
+            
+            // Second line: Mode and reference (transaction ID or cheque number if available)
+            const modeText = item.by + (item.txn ? ` (${item.txn})` : '');
+            doc.text(modeText, centerX - 40, y);
+            
+            doc.text(`Rs. ${item.amount}/-`, centerX + 20, y);
+            doc.text(`Rs. ${dueAmount.toFixed(2)}/-`, pageWidth - margin, y, { align: 'right' });
+            y += 6;
+
+            if (item.note && item.note.trim() !== '') {
+              y+=2;
+              doc.setFontSize(8);
+              doc.text(`Narration: ${item.note}`, margin , y, { maxWidth: pageWidth - 2 * margin - 10 });
+              y += 6;
+              doc.setFontSize(10); // Reset font size
+            }
+            });
+            
+            // Rest of the function remains the same...
+            // Horizontal line
+            doc.line(margin, y + 1, pageWidth - margin, y + 1);
+            const totalAmount = cart.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+        
+            // Display total amount
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text("Total Amount:", centerX-10, y);
+            doc.text(`Rs. ${totalAmount.toFixed(2)}/-`, centerX + 40, y, { align: 'right' });
+            doc.line(margin, y + 5, pageWidth - margin, y + 5);
+            // Signature and note
+            y += 15;
+            doc.text("Signature", pageWidth - margin, y, { align: 'right' });
+            
+            
+            doc.setFontSize(8);
+            doc.text("Note: Parents are requested to preserve the receipt for future clarifications in respect of fee paid by you.", margin, y, { maxWidth: pageWidth - 2 * margin });
+            y += 4;
+            doc.text("Fee once paid will not be refunded or transferred. Cheques subject to realization.", margin, y, { maxWidth: pageWidth - 2 * margin });
+            
+            if (isCopy) {
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text("COPY", pageWidth - margin, startY - 5, { align: 'right' });
+            }
+        
+        return y;
+      };
+      
+      // Draw first receipt
+      drawReceipt(15);
+      
+      if (twoCopies) {
+        // Add new page for second copy
+        doc.addPage();
+        drawReceipt(15, true);
+      }
+      
+      return doc;
+    }
+
+    function downloadPDF(doc) {
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2,'0')}${today.getDate().toString().padStart(2,'0')}`;
+      const filename = `FeeReceipt_${student.cr726_studentid}_${dateStr}.pdf`;
+      doc.save(filename);
+    }
+
+  function printReceipt() {
+  const printContent = document.getElementById('printContent');
+
+  function generateSingleReceiptHTML(label = '') {
+    let receiptHTML = `
+      <div style="text-align: center; margin-bottom: 5px;">
+  ${schoolLogo ? `<div style="display:flex; justify-content:center;"><img src="${schoolLogo}" style="height: 85px; margin-top: 0;"></div>` : ''}
+  <div style="display: inline-block; text-align: center;">
+    <h2 style="margin: 2px 0; font-size: 20px;">${schoolName || 'School Name'}</h2>
+    ${schoolSubheading ? `<p style="margin: 0; font-size: 13px;">${schoolSubheading}</p>` : ''}
+  </div>
+  <h3 style="margin: 5px 0 8px; font-size: 18px; border-bottom: 1px solid #000; padding-bottom: 3px;">FEE RECEIPT</h3>
+</div>
+
+        
+        <div style="display: flex; justify-content: flex-start; margin-bottom: 10px; font-size: 16px;">
+          <div style="margin-right:35%; padding-left: 23px;" >
+            <p style="margin: 2px 0;"><strong>Student ID:</strong> ${student.crfec_studentid || ''}</p>
+            <p style="margin: 2px 0;"><strong>Student Name:</strong> ${student.crfec_studentname || ''}</p>
+            <p style="margin: 2px 0;"><strong>Father Name:</strong> ${student.crfec_fathername || ''}</p>
+          </div>
+          <div style="text-align: left;">
+            <p style="margin: 2px 0;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p style="margin: 2px 0;"><strong>Class:</strong> ${student.crfec_class || ''}</p>
+            <p style="margin: 2px 0;"><strong>Section:</strong> ${student.crfec_section || ''}</p>
+          </div>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 15px;">
+          <thead>
+            <tr style="background: white; color: black;">
+              <th style="padding: 5px; text-align: left; border: 1px solid #ddd;">Towards</th>
+              <th style="padding: 5px; text-align: left; border: 1px solid #ddd;">Mode/Ref</th>
+              <th style="padding: 5px; text-align: right; border: 1px solid #ddd;">Amount</th>
+              <th style="padding: 5px; text-align: right; border: 1px solid #ddd;">Due</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+    cart.forEach(item => {
+      const dueAmount = calculateDueAmount(item.towards, parseFloat(item.amount));
+      receiptHTML += `
+        <tr>
+          <td style="padding: 5px; border: 1px solid #ddd;">${item.towards}</td>
+          <td style="padding: 5px; border: 1px solid #ddd;">${item.by}${item.txn ? ` (${item.txn})` : ''}</td>
+          <td style="padding: 5px; border: 1px solid #ddd; text-align: right;">₹${item.amount}</td>
+          <td style="padding: 5px; border: 1px solid #ddd; text-align: right;">₹${dueAmount.toFixed(2)}</td>
+        </tr>`;
+
+      if (item.note && item.note.trim() !== '') {
+        receiptHTML += `
+        <tr>
+          <td colspan="4" style="padding: 3px 5px; font-size: 10px; color: #555; border: 1px solid #ddd;">
+            <strong>Note:</strong> ${item.note}
+          </td>
+        </tr>`;
+      }
+    });
+
+    const totalAmount = cart.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+
+    receiptHTML += `
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="padding: 5px; border-top: 2px solid #2a6f9e;"></td>
+              <td style="padding: 5px; border-top: 2px solid #2a6f9e; text-align: right; font-weight: bold;">Total:</td>
+              <td style="padding: 5px; border-top: 2px solid #2a6f9e; text-align: right; font-weight: bold;">₹${totalAmount.toFixed(2)}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div style="display:flex;width:100%; justify-content: space-between;">
+          <div style="margin-top: 20px; width:68%; font-size: 16px; color: black;">
+            <p>Note: Parents are requested to preserve the receipt for future clarifications in respect of fee paid by you. Fee once paid will not be refunded or transferred. Cheques subject to realization.</p>
+          </div>
+          <div style="margin-top: 20px; text-align: right; font-size: 14px;">
+            <p>Authorized Signature</p>
+            <p style="margin-top: 15px;">_________________________</p>
+          </div>
+        </div>
+      </div>`;
+
+    return receiptHTML;
+  }
+
+  let fullReceiptHTML = `
+  <div style="page-break-inside: avoid; padding: 10px;">
+    ${generateSingleReceiptHTML("Student Copy")}
+    <div style="height: 20px;"></div>
+    ${((schoolName || "").toLowerCase() === "vedham high school") ? generateSingleReceiptHTML("Office Copy") : ''}
+  </div>
+`;
+
+
+  // Append print buttons
+  fullReceiptHTML += `
+    <div class="print-actions">
+      <button class="print-btn" onclick="window.handlePrintComplete()">Print Receipt</button>
+      <button class="close-btn" onclick="window.closePrintModal()">Close</button>
+    </div>`;
+
+  printContent.innerHTML = fullReceiptHTML;
+  document.getElementById('printModal').style.display = 'flex';
+}
+
+    /*window.handlePrintComplete = function() {
+      if (!hasPrinted) {
+        hasPrinted = true;
+        window.print();
+        setTimeout(() => {
+          closePrintModal();
+          $('submitPrint').disabled = true;
+          $('submitWhatsapp').disabled = false;
+        }, 100);
+      }
+    };*/
+window.closePrintModal = function() {
+      const modal = document.getElementById('printModal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+      $('submitPrint').disabled = true;
+      $('submitWhatsapp').disabled = false;
+    };
+
+ window.handlePrintComplete = function() {
+  if (!hasPrinted) {
+    hasPrinted = true;
+    
+    // Force a small delay to ensure styles are applied
+    setTimeout(() => {
+      try {
+        window.print();
+        
+        // Add another small delay before closing
+        setTimeout(() => {
+          closePrintModal();
+          
+          
+        }, 200);
+      } catch (err) {
+        console.error('Print error:', err);
+        // Fallback handling
+        closePrintModal();
+        $('submitPrint').disabled = true;
+        $('submitWhatsapp').disabled = false;
+      }
+    }, 100);
+  }
+};
+
+function updateAmountFieldWithDueFee() {
+      const selectedFeeType = $('towards').value;
+      const dueAmount = calculateDueAmount(selectedFeeType);
+      
+      if (dueAmount > 0) {
+        $('amount').value = dueAmount.toFixed(2);
+        $('amount').classList.add('auto-filled');
+        setTimeout(() => {
+          $('amount').classList.remove('auto-filled');
+        }, 1000);
+      } else {
+        $('amount').value = '';
+      }
+    }
+     
+    window.onload = () => {
+      setupIframePrint();
+      // defaults
+      $('payDate').valueAsDate = new Date();
+      for(let y = 2025; y <= 2029; y++) {
+        $('academicYear').innerHTML += `<option>${y}-${(''+(y+1)).slice(2)}</option>`;
+      }
+
+      // ReceivedBy field toggle
+      $('receivedBy').onchange = e => {
+        const v = e.target.value;
+        $('txnContainer').style.display = (v === 'UPI' || v === 'Bank Transfer' || v === 'CHEQUE' || v==="CARD") ? 'block' : 'none';
+        $('txnLabel').innerText = v === 'CHEQUE' ? 'Cheque No' : 'Txn ID';
+      };
+
+      $('towards').addEventListener('change', updateAmountFieldWithDueFee);
+
+
+      // Add to cart
+      $('addToCart').onclick = () => {
+        const receiptt = parseFloat($('receiptt').value);
+        const amount = parseFloat($('amount').value);
+        if (isNaN(amount) || amount <= 0) {
+          ack('Please enter a valid amount', 'error');
+          return;
+        
+        }
+        
+        cart.push({
+          date: $('payDate').value,
+          towards: $('towards').value,
+          year: $('academicYear').value,
+          by: $('receivedBy').value,
+          txn: $('txnOrCheque').value || '',
+          amount: amount.toFixed(2),
+          note: $('narration').value
+        });
+        renderCart();
+        // Clear form
+        $('amount').value = '';
+        $('narration').value = '';
+      };
+
+      // Submit & Print
+      $('submitPrint').onclick = async () => {
+        if (cart.length === 0) {
+          ack('Please add at least one payment to cart', 'error');
+          return;
+        }
+        
+        showLoading();
+        const receiptNumber1 = document.getElementById("receiptt").value.trim();
+        try {
+          // First submit the data
+          await new Promise((resolve) => {
+            post({
+              type: 'SUBMIT_FEES',
+              payload: { student, cart,receiptNumber1, print: true }
+            });
+            
+            // Listen for success response
+            const handler = ({data}) => {
+              if (data.type === 'SUBMIT_SUCCESS') {
+                window.removeEventListener('message', handler);
+                resolve();
+              }
+            };
+            window.addEventListener('message', handler);
+          });
+          
+          hideLoading();
+          printReceipt(); // Show print modal after successful submission
+          
+        } catch (error) {
+          hideLoading();
+          ack('Error submitting payment', 'error');
+          console.error(error);
+        }
+      };
+      
+      // Submit & WhatsApp
+      $('submitWhatsapp').onclick = () => {
+        const doc=makePdf(false);
+            
+        const b64=doc.output('datauristring');
+        $('submitWhatsapp').disabled = true;
+        post({
+            type: 'PDF_BASE64',
+            payload: {
+                base64: b64,
+                studentId: student.crfec_studentid,
+                school: schoolName
+            }});
+        
+      };
+
+   window.addEventListener('afterprint', function() {
+  // Only close if we've already printed
+  if (hasPrinted) {
+    closePrintModal();
+    $('submitPrint').disabled = true;
+  }
+});
+
+
+      // Listen for messages from Wix page code
+      window.addEventListener('message', ({data}) => {
+        const { type, payload } = data;
+        switch(type) {
+          case 'EMBED_READY':
+            showLoading();
+            post({type: 'FETCH_MASTER'});
+            break;
+            
+          case 'MASTER_DATA':
+            hideLoading();
+            master = payload;
+            renderMaster();
+            break;
+            
+          case 'TXN_DATA':
+            hideLoading();
+            history = payload;
+            renderHistory();
+            break;
+            
+          case 'SCHOOL_DATA':
+            schoolLogo = payload.logo;
+            schoolSubheading = payload.subheading;
+            schoolName = payload.School;
+            break;
+            
+          case 'SUBMIT_SUCCESS':
+            // Don't disable buttons here - let the print complete handler do it
+            ack('Payment submitted successfully!');
+            break;
+            
+          case 'ERROR':
+            hideLoading();
+            ack(payload, 'error');
+            break;
+          
+        }
+      });
+
+      // Kick off the handshake
+      post({type: 'EMBED_READY'});
+    };
+
+    function renderMaster(){
+      const tb = $('masterTable').querySelector('tbody'); 
+      tb.innerHTML = '';
+      
+      // Cache the searchable text for each row
+      const rows = master.map(r => {
+        const searchText = [
+          r.crfec_studentid || '',
+          r.crfec_studentname || '',
+          r.crfec_fathername || '',
+          r.crfec_class || '',
+          r.crfec_section || ''
+        ].join('|').toLowerCase();
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.crfec_studentid||''}</td>
+          <td>${r.crfec_studentname||''}</td>
+          <td>${r.crfec_fathername||''}</td>
+          <td>${r.crfec_class||''}</td>
+          <td>${r.crfec_section||''}</td>
+          <td><button class="btn-pay">Pay</button></td>
+<td><button  class="add-discount-btn" onclick="showDiscountForm(this)" style="display: none;">Add Discount</button></td>        `;
+        tr.querySelector('button').onclick = () => onPay(r);
+        tb.appendChild(tr);
+        
+        return { tr, searchText };
+      });
+
+      // Use debounce for better performance
+      let searchTimeout;
+      $('searchInput').oninput = e => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          const q = e.target.value.toLowerCase();
+          rows.forEach(row => {
+            row.tr.style.display = row.searchText.includes(q) ? '' : 'none';
+          });
+        }, 100); // 100ms delay
+      };
+    }
+
+    function onPay(r){
+      student=r;
+      // Initialize fee structure
+
+      // populate the display fields
+        $('dispName').innerText    = r.crfec_studentname || '—';
+        $('dispID').innerText      = r.crfec_studentid   || '—';
+        $('dispClass').innerText   = r.crfec_class       || '—';
+        $('dispSection').innerText = r.crfec_section     || '—';
+
+      feeStructure = {
+        'Admission Fee': Number(r.crfec_admissionfee || 0),
+        'Annual Fee': Number(r.crfec_annualfee || 0),
+        'Registration Fee': Number(r.crfec_registrationfee || 0),
+        'Caution Deposit': Number(r.crfec_cautiondeposit || 0),
+        'Tution Fee Term-1': Number(r.crfec_tutionfee || 0),
+        'Tution Fee Term-2': Number(r.crfec_tutionfeeterm2 || 0),
+        'Tution Fee Term-3': Number(r.crfec_tutionfeeterm3 || 0),
+        'Transport Fee Term-1': Number(r.crfec_busfee || 0),
+        'Transport Fee Term-2': Number(r.crfec_busfeeterm2 || 0),
+        'Transport Fee Term-3': Number(r.crfec_busfeeterm3 || 0),
+        'Exam Fee': Number(r.crfec_examfee || 0),
+        'Miscellaneous Fee': Number(r.crfec_miscellaneousfee || 0),
+        'IIT Fee': Number(r.crfec_iitfee || 0) 
+      };
+      
+      $('boxTotal').innerText=`₹${Number(r.crfec_totalfee||0).toLocaleString()}`;
+      hideEl($('masterPanel'));
+      showEl($('formPanel'));
+      showLoading();
+      post({type:'FETCH_TXN',payload:{studentId:r.crfec_studentid}});
+      setTimeout(() => {
+        if ($('towards').value) {
+          updateAmountFieldWithDueFee();
+        }
+      }, 500);
+    }
+
+    function renderHistory(){
+      const total=Number(student.crfec_totalfee||0);
+      const paid=history.reduce((s,x)=>s+Number(x.cr726_feespaid||0),0);
+      $('boxPaid').innerText=`₹${paid.toLocaleString()}`;
+      $('boxDue').innerText=`₹${(total-paid).toLocaleString()}`;
+
+      const fees=[
+        ['Admission Fee','crfec_admissionfee'],
+        ['Annual Fee','crfec_annualfee'],
+        ['Registration Fee','crfec_registrationfee'],
+        ['Caution Deposit','crfec_cautiondeposit'],
+        ['Tution Fee Term-1','crfec_tutionfee'],
+        ['Tution Fee Term-2','crfec_tutionfeeterm2'],
+        ['Tution Fee Term-3','crfec_tutionfeeterm3'],
+        ['Transport Fee Term-1','crfec_busfee'],
+        ['Transport Fee Term-2','crfec_busfeeterm2'],
+        ['Transport Fee Term-3','crfec_busfeeterm3'],
+        ['Exam Fee','crfec_examfee'],
+        ['Miscellaneous Fee','crfec_miscellaneousfee'],
+        ['IIT Fee','crfec_iitfee']
+      ];
+      const grid=$('breakdownGrid'); grid.innerHTML='';
+      fees.forEach(([lbl,key])=>{
+        const amt=Number(student[key]||0);
+        const p=history.filter(t=>t.cr726_emino===lbl).reduce((s,x)=>s+Number(x.cr726_feespaid||0),0);
+        const div=document.createElement('div');
+        div.className='fee-box';
+        div.innerHTML=`<h4>${lbl}</h4>
+          <small>Total: ₹${amt.toLocaleString()}</small><br>
+          <small>Paid: ₹${p.toLocaleString()}</small><br>
+          <small>Due: ₹${(amt-p).toLocaleString()}</small>`;
+        grid.appendChild(div);
+      });
+
+      const tb=$('txnTable').querySelector('tbody'); tb.innerHTML='';
+      history.forEach(t=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${t.cr726_date||''}</td>
+          <td>₹${Number(t.cr726_feespaid||0).toLocaleString()}</td>
+          <td>${t.cr726_receivedby||''}</td>
+          <td>${t.cr726_emino||''}</td>
+          <td>${t.crfec_academicyear||''}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    function renderCart(){
+      const tb=$('cartTable').querySelector('tbody'); tb.innerHTML='';
+      cart.forEach((it,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${it.date}</td><td>${it.towards}</td>
+          <td>${it.year}</td><td>${it.by}</td><td>${it.txn}</td>
+          <td>₹${Number(it.amount).toLocaleString()}</td>
+          <td>${it.note}</td><td><button class="btn-remove">×</button></td>`;
+        tr.querySelector('button').onclick=()=>{ cart.splice(i,1); renderCart(); };
+        tb.appendChild(tr);
+      });
+    }
+  })();
+  </script>
+  <!-- Add this right before your closing </body> tag -->
+<div id="discountForm" style="display:none;position:absolute;background:white;padding:20px;border-radius:5px;box-shadow:0 0 10px rgba(0,0,0,0.3);z-index:1000;width:300px;">
+  <div style="position:relative;">
+    <span onclick="hideDiscountForm()" style="position:absolute;top:10px;right:10px;font-size:20px;cursor:pointer;">&times;</span>
+    <h3 style="margin-top:0;">Add Discount</h3>
+    <form>
+      <div style="margin-bottom:15px;">
+        <label style="display:block;margin-bottom:5px;">Discount Category:</label>
+        <select id="discountCategory" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:5px;font-size:16px;">
+          <option>Select category</option>                     
+          <option>Admission Fee</option>
+          <option>Annual Fee</option>
+          <option>Registration Fee</option>
+          <option>Caution Deposit</option>
+          <option>Tution Fee Term-1</option>
+          <option>Tution Fee Term-2</option>
+          <option>Tution Fee Term-3</option>
+          <option>Transport Fee Term-1</option>
+          <option>Transport Fee Term-2</option>
+          <option>Transport Fee Term-3</option>
+          <option>Exam Fee</option>
+          <option>Miscellaneous Fee</option>
+          <option>IIT Fee</option>
+        </select>
+      </div>
+      <div style="margin-bottom:15px;">
+        <label style="display:block;margin-bottom:5px;">Discount Amount:</label>
+        <input type="number" id="discountAmount" style="width:93%;padding:10px 12px;border:1px solid #ccc;border-radius:5px;font-size:16px;">
+      </div>
+      <button type="button" onclick="submitDiscount()" style="display:block;width:100%;padding:12px;font-size:16px;background:#0d6efd;color:white;border:none;border-radius:5px;cursor:pointer;">Submit</button>
+    </form>
+  </div>
+</div>
+<script>
+function showDiscountForm(buttonElement) {
+  const form = document.getElementById('discountForm');
+
+  // Get button position
+  const rect = buttonElement.getBoundingClientRect();
+
+  // Set form position near the button
+  form.style.top = (window.scrollY + rect.bottom + 10) + 'px';  // 10px below the button
+  form.style.left = (window.scrollX + rect.left -950) + 'px';        // align with button's left
+  form.style.width = '500px';
+  form.style.display = 'block';
+
+  // Optionally, attach data
+  form.dataset.recordId = buttonElement.closest('.record')?.dataset.recordId || '';
+}
+
+function hideDiscountForm() {
+  document.getElementById('discountForm').style.display = 'none';
+}
+
+function submitDiscount() {
+  const category = document.getElementById("discountCategory").value;
+  const amount = document.getElementById("discountAmount").value;
+ // btn.style.display = "none";
+  if (!category || category === "Select category" || !amount) {
+    alert("Please fill in both fields correctly.");
+    return;
+  }
+
+  const payload = {
+    category: category,
+    amount: parseFloat(amount),
+    recordId: document.getElementById('discountForm').dataset.recordId || null
+  };
+
+  console.log("discount payload", payload);
+
+  alert("Discount added successfully (simulated)!");
+  hideDiscountForm();
+}
+
+// Optional: close form when clicking outside it
+document.addEventListener('click', function (e) {
+  const form = document.getElementById('discountForm');
+  if (!form.contains(e.target) && !e.target.classList.contains('add-discount-btn')) {
+    hideDiscountForm();
+  }
+});
+</script>
+</body>
+</html>
