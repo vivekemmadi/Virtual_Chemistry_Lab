@@ -1,5 +1,3 @@
-# Virtual Chemistry Lab
-
 # 🧪 Virtual Chemistry Lab
 
 Welcome to the **Virtual Chemistry Lab**! This is a digital simulation tool designed for students and educators to perform and record chemistry experiments virtually — no actual chemicals required! 🧬🧫
